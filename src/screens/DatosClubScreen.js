@@ -1,0 +1,113 @@
+import React, { useState, useEffect } from 'react';
+import { View, 
+          Text, 
+          TextInput, 
+          StyleSheet, 
+          ScrollView, 
+          TouchableOpacity, 
+          Alert } from 'react-native';
+import { useInscripcion } from '../context/InscripcionContext';
+
+const DatosClubScreen = ({ navigation }) => {
+  
+  const { datosInscripcion,actualizarClub, limpiarRegistro } = useInscripcion();
+  useEffect(() => {
+    
+  if (datosInscripcion.club.nombre !== '') {
+    Alert.alert(
+      "Inscripción en curso",
+      `Tienes un borrador de ${datosInscripcion.club.nombre}. ¿Deseas continuar o empezar de cero?`,
+      [
+        { text: "Empezar de cero", onPress: () => limpiarRegistro(), style: "destructive" },
+        { text: "Continuar", onPress: () => navigation.navigate('ListaEquipos') }
+      ]
+    );
+  }
+  }, []);
+
+  const [nombre, setNombre] = useState(datosInscripcion.club.nombre || '');
+  const [ciudad, setCiudad] = useState(datosInscripcion.club.ciudad || '');
+  const [cantSub14, setCantSub14] = useState(0);
+  const [cantSub16, setCantSub16] = useState(0);
+
+  const continuar = () => {
+    
+    if (!nombre || !ciudad || (cantSub14 === 0 && cantSub16 === 0)) {
+      Alert.alert("Error", "Por favor completa el nombre, ciudad y selecciona al menos un equipo.");
+      return;
+    }
+    limpiarRegistro();
+    actualizarClub({ 
+      nombre, 
+      ciudad, 
+      cantSub14: parseInt(cantSub14), 
+      cantSub16: parseInt(cantSub16) 
+    });
+    navigation.navigate('ListaEquipos');
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Inscripción de Equipos</Text>
+      
+      <View style={styles.form}>
+        <Text style={styles.label}>Nombre del Club / Institución</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ej: Tigres Rugby Club" 
+          value={nombre}
+          onChangeText={setNombre}
+        />
+
+        <Text style={styles.label}>Ciudad</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="Ej: Salta" 
+          value={ciudad}
+          onChangeText={setCiudad}
+        />
+
+        <Text style={styles.sectionTitle}>Cantidad de Equipos</Text>
+        
+        <View style={styles.counterRow}>
+          <Text style={styles.label}>Sub 14 Damas:</Text>
+          <TextInput 
+            style={styles.inputSmall} 
+            keyboardType="numeric" 
+            placeholder="0"
+            onChangeText={setCantSub14}
+          />
+        </View>
+
+        <View style={styles.counterRow}>
+          <Text style={styles.label}>Sub 16 Damas:</Text>
+          <TextInput 
+            style={styles.inputSmall} 
+            keyboardType="numeric" 
+            placeholder="0"
+            onChangeText={setCantSub16}
+          />
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={continuar}>
+          <Text style={styles.buttonText}>Continuar a Listas de Buena Fe</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#D32F2F', textAlign: 'center' },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 10, color:'#D32F2F' },
+  form: { marginTop: 10 },
+  label: { fontSize: 16, marginBottom: 5, color: '#333' },
+  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 15, fontSize: 16 },
+  inputSmall: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, width: 60, textAlign: 'center' },
+  counterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
+  button: { backgroundColor: 'black', padding: 15, borderRadius: 10, marginTop: 30, alignItems: 'center' },
+  buttonText: { color: 'white', fontSize: 18, fontWeight: 'bold' }
+});
+
+export default DatosClubScreen;
