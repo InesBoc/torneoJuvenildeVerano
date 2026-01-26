@@ -42,6 +42,7 @@ const ListaBuenaFe = ({ route, navigation }) => {
 
   const agregarALista = () => {
     const { nombre, apellido, dni, fechaNac } = nuevaJugadora;
+    const categoriaAuto = nombreEquipo.includes("14") ? "Sub 14" : "Sub 16";
 
     if (!nombre || !apellido || !dni || fechaNac.length < 10) {
       mostrarAlerta("Atención", "Completa todos los datos de la jugadora.");
@@ -63,10 +64,18 @@ const ListaBuenaFe = ({ route, navigation }) => {
       return;
     }
 
-    if (anio < 2010 || anio > 2014) {
-      mostrarAlerta("Categoría", "Solo se permiten jugadoras nacidas entre 2010 y 2014.");
+    if (categoriaAuto === "Sub 14") {
+    if (anio < 2012 || anio > 2014) {
+      mostrarAlerta("Categoría Sub 14", "Para Sub 14, deben ser nacidas entre 2012 y 2014.");
       return;
     }
+  } else {
+   
+    if (anio < 2010 || anio > 2013) {
+      mostrarAlerta("Categoría Sub 16", "Para Sub 16, deben ser nacidas entre 2010 y 2013.");
+      return;
+    }
+  }
 
     if (jugadoras.find(j => j.dni === dni)) {
       mostrarAlerta("Duplicado", "Este DNI ya está en la lista.");
