@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Linking } from 'react-native';
 
 export default function MapaProxy({ styles }) {
-  const lat = -24.7471;
-  const lon = -65.4953;
+  const lat = -24.748896;
+  const lon = -65.493877;
   
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
 
