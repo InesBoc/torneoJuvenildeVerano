@@ -8,18 +8,18 @@ export default function MapaProxy({ styles }) {
     <MapView
       style={styles.map}
       initialRegion={{
-        latitude:-24.748896, 
-        longitude: -65.493877,
+        latitude:-24.748869, 
+        longitude: -65.493939,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       }}
     >
     <Marker 
-        coordinate={{ latitude: -24.748896, longitude: -65.493877 }} 
+        coordinate={{ latitude: -24.748869, longitude: -65.493939 }} 
         title="Tigres Rugby Club"
         description="Click para indicaciones"
         onCalloutPress={() => {
-            const url = `google.navigation:q=-24.748896, -65.493877`;
+            const url = `google.navigation:q=-24.748869, -65.493939`;
             Linking.openURL(url);
     }}
     />
