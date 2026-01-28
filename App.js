@@ -117,11 +117,3 @@ const Stack = createStackNavigator();
 }
 
 
-const styles = StyleSheet.create({
-  map: {
-    height: 200,
-    width: '100%',
-    borderRadius: 10,
-    marginVertical: 10,
-  },
-});
