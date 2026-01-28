@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native'; 
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'; 
+import { collection, query, onSnapshot } from 'firebase/firestore'; 
 import { db, auth } from '../services/firebase';
 import { globalStyles } from '../styles/globalStyles';
 
@@ -9,83 +9,88 @@ export default function MisInscripcionesScreen({ navigation }) {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    const cargarHistorial = async () => {
-      const user = auth.currentUser;
-      
-      const uidABuscar = user ? user.uid : "anonimo";
+  const user = auth.currentUser;
+  const uidABuscar = user ? user.uid : "anonimo";
+  
+  console.log("ID del usuario logueado actualmente:", uidABuscar);
 
-      try {
-        console.log("Cargando inscripciones para:", uidABuscar);
-        const q = query(
-          collection(db, "inscripciones"), 
-          where("usuarioId", "==", uidABuscar)
-        );
+  const q = query(collection(db, "inscripciones")); 
 
-        const querySnapshot = await getDocs(q);
-        const listaTemporal = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        listaTemporal.sort((a, b) => b.fechaInscripcion - a.fechaInscripcion);
-
-        setHistorial(listaTemporal);
-      } catch (error) {
-        console.error("Error cargando historial", error);
-      } finally {
-        setCargando(false);
-      }
-    };
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    console.log("Documentos encontrados en Firebase:", snapshot.size);
     
-    cargarHistorial();
-  }, []);
+    const docs = snapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log("ID del documento en Firebase:", data.usuarioId);
+      return { id: doc.id, ...data };
+    });
 
-  if (cargando) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#D32F2F" />;
+    
+    const filtrados = docs.filter(d => d.usuarioId === uidABuscar);
+    console.log("Documentos que coinciden con el usuario:", filtrados.length);
+
+    setHistorial(docs); 
+    setCargando(false);
+  }, (error) => {
+    console.error("Error de conexión a Firebase:", error);
+    setCargando(false);
+  });
+
+  return () => unsubscribe();
+}, []);
+
+  if (cargando) return (
+    <View style={{ flex: 1, justifyContent: 'center' }}>
+      <ActivityIndicator size="large" color="#D32F2F" />
+    </View>
+  );
 
   return (
     <View style={[globalStyles.mainContainer, { flex: 1 }]}>
-      <Text style={globalStyles.title}>Mis Inscripciones</Text>
-      <FlatList
-        data={historial}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 80 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.cardHistorial}
-            onPress={() => navigation.navigate('DetalleInscripcion', { inscripcion: item })}
-          >
-            <View style={styles.headerCard}>
-              <Text style={styles.clubName}>{item.club?.nombre?.toUpperCase() || 'CLUB SIN NOMBRE'}</Text>
-              <Text style={styles.fecha}>
-                {item.fechaInscripcion?.toDate ? item.fechaInscripcion.toDate().toLocaleDateString() : 'Pendiente'}
-              </Text>
-            </View>
-            
-            <Text style={styles.ciudadText}>📍 {item.club?.ciudad}</Text>
-            
-            <View style={styles.divider} />
-            
-            <Text style={styles.labelEquipos}>Equipos Inscriptos:</Text>
-            {item.equipos?.map((equipo, index) => (
-              <Text key={index} style={styles.equipoNombre}>
-                • {equipo.nombre}
-              </Text>
-            ))}
-
-            <View style={styles.footerCard}>
-              <Text style={styles.estadoText}>Estado: {item.estado}</Text>
-              <View style={styles.badgeOk}>
-                <Text style={styles.badgeText}>ENVIADO</Text>
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={globalStyles.scrollContent}
+        showsVerticalScrollIndicator={true}
+      >
+        <Text style={globalStyles.title}>Mis Inscripciones</Text>
+        
+        {historial.length === 0 ? (
+          <View style={{ alignItems: 'center', marginTop: 50 }}>
+            <Text style={{ color: '#666' }}>No hay inscripciones aún.</Text>
+          </View>
+        ) : (
+          historial.map((item) => (
+            <TouchableOpacity 
+              key={item.id}
+              style={styles.cardHistorial}
+              onPress={() => navigation.navigate('DetalleInscripcion', { inscripcion: item })}
+            >
+              <View style={styles.headerCard}>
+                <Text style={styles.clubName}>{item.club?.nombre?.toUpperCase()}</Text>
+                <Text style={styles.fecha}>
+                  {item.fechaInscripcion?.toDate ? item.fechaInscripcion.toDate().toLocaleDateString() : 'Reciente'}
+                </Text>
               </View>
-            </View>
-          </TouchableOpacity>
+              
+              <Text style={styles.ciudadText}>📍 {item.club?.ciudad}</Text>
+              
+              <View style={styles.divider} />
+              
+              <Text style={styles.labelEquipos}>Equipos Inscriptos:</Text>
+              {item.equipos?.map((eq, idx) => (
+                <Text key={idx} style={styles.equipoNombre}>• {eq.nombre}</Text>
+              ))}
+
+              <View style={styles.footerCard}>
+                <Text style={styles.estadoText}>Estado: {item.estado}</Text>
+                <View style={styles.badgeOk}>
+                  <Text style={styles.badgeText}>ENVIADO</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))
         )}
-        ListEmptyComponent={
-          <Text style={{ textAlign: 'center', marginTop: 50, color: '#666' }}>
-            No tienes inscripciones previas.
-          </Text>
-        }
-      />
+      </ScrollView>
     </View>
   );
 }

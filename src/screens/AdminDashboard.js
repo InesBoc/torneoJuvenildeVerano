@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { 
   View, 
   Text, 
@@ -9,14 +10,15 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { db } from '../services/firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function AdminDashboard() {
+  const navigation = useNavigation();
   const [inscripciones, setInscripciones] = useState([]);
   const [cargando, setCargando] = useState(true);
 
-  useEffect(() => {
+useEffect(() => {
     const q = query(collection(db, "inscripciones"), orderBy("fechaInscripcion", "desc"));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -58,13 +60,21 @@ export default function AdminDashboard() {
         data={inscripciones}
         keyExtractor={item => item.id}
         ListHeaderComponent={
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerText}>
-              Total de inscripciones: <Text style={{ fontWeight: 'bold' }}>{inscripciones.length}</Text>
-            </Text>
+          <View>
+            <TouchableOpacity 
+              style={styles.btnIrFixture}
+              onPress={() => navigation.navigate('AdminFixture')}
+            >
+              <Text style={styles.btnIrFixtureText}>🏑 GESTIONAR RESULTADOS Y GOLES</Text>
+            </TouchableOpacity>
+
+            <View style={styles.headerInfo}>
+              <Text style={styles.headerText}>
+                Total de inscripciones: <Text style={{ fontWeight: 'bold' }}>{inscripciones.length}</Text>
+              </Text>
+            </View>
           </View>
         }
-        contentContainerStyle={{ paddingBottom: 50 }}
         renderItem={({ item }) => (
           <View style={styles.adminCard}>
             <View style={styles.cardHeader}>
@@ -78,13 +88,6 @@ export default function AdminDashboard() {
             </View>
             
             <Text style={styles.infoAdmin}>📍 {item.club?.ciudad}</Text>
-            
-            <View style={styles.equipoListAdmin}>
-              <Text style={styles.subSubtitle}>Equipos Registrados:</Text>
-              {item.equipos?.map((eq, i) => (
-                <Text key={i} style={styles.eqItem}>• {eq.nombre}</Text>
-              ))}
-            </View>
 
             <View style={styles.actionRow}>
               <TouchableOpacity 
@@ -105,46 +108,36 @@ export default function AdminDashboard() {
             </View>
           </View>
         )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No hay inscripciones registradas.</Text>
-        }
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerInfo: { 
-    padding: 20, 
-    backgroundColor: '#f8f9fa', 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#eee' 
+  btnIrFixture: {
+    backgroundColor: '#333',
+    padding: 15,
+    marginHorizontal: 20,
+    marginTop: 10,
+    borderRadius: 10,
+    elevation: 3
   },
+  btnIrFixtureText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center'
+  },
+  headerInfo: { padding: 20, backgroundColor: '#f8f9fa', borderBottomWidth: 1, borderBottomColor: '#eee', marginTop: 10 },
   headerText: { fontSize: 16, color: '#333' },
-  adminCard: { 
-    backgroundColor: '#fff', 
-    marginHorizontal: 20, 
-    marginVertical: 10, 
-    padding: 15, 
-    borderRadius: 12, 
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
+  adminCard: { backgroundColor: '#fff', marginHorizontal: 20, marginVertical: 10, padding: 15, borderRadius: 12, elevation: 5, paddingBottom: 80 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   clubTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   badgeEstado: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 5 },
   badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   infoAdmin: { color: '#666', marginTop: 5, fontSize: 14 },
-  equipoListAdmin: { marginTop: 10, backgroundColor: '#f9f9f9', padding: 10, borderRadius: 8 },
-  subSubtitle: { fontWeight: 'bold', fontSize: 12, color: '#D32F2F', marginBottom: 5 },
-  eqItem: { fontSize: 14, color: '#333' },
   actionRow: { flexDirection: 'row', marginTop: 15, justifyContent: 'space-between', alignItems: 'center' },
   btnComprobante: { borderBottomWidth: 1, borderColor: '#3498db' },
   btnLinkText: { color: '#3498db', fontWeight: 'bold' },
   btnStatus: { paddingVertical: 8, paddingHorizontal: 15, borderRadius: 8 },
   btnStatusText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#999' }
 });

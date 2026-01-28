@@ -19,10 +19,19 @@ import * as Sharing from 'expo-sharing';
 import { useInscripcion } from '../context/InscripcionContext';
 import { globalStyles } from '../styles/globalStyles';
 
+
 const ResumenInscripcion = ({ navigation }) => {
   const { datosInscripcion, limpiarRegistro } = useInscripcion();
   const [imagenCargada, setImagenCargada] = useState(null);
   const [enviando, setEnviando] = useState(false);
+
+  const mostrarAlerta = (titulo, mensaje) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${titulo}: ${mensaje}`);
+    } else {
+      Alert.alert(titulo, mensaje);
+    }
+  };
 
   const seleccionarImagen = async () => {
     let resultado = await ImagePicker.launchImageLibraryAsync({
@@ -35,7 +44,12 @@ const ResumenInscripcion = ({ navigation }) => {
     }
   };
 
- const generarPDF = async () => {
+  const generarPDF = async () => {
+    if (!datosInscripcion || !datosInscripcion.club) {
+        mostrarAlerta("Error", "No hay datos de inscripción para generar el PDF");
+        return;
+    }
+
     const htmlContent = `
       <html>
         <head>
@@ -61,11 +75,9 @@ const ResumenInscripcion = ({ navigation }) => {
             <p>Sede: ${datosInscripcion.club.ciudad}</p>
           </div>
           <hr />
-
           ${datosInscripcion.equipos.map(eq => `
             <div class="team-card">
               <h3 style="color: #D32F2F; margin-top: 0;">Equipo: ${eq.nombre}</h3>
-              
               <table>
                 <thead>
                   <tr>
@@ -84,22 +96,17 @@ const ResumenInscripcion = ({ navigation }) => {
                   `).join('')}
                 </tbody>
               </table>
-
               <div class="staff-section">
                 <div class="staff-title">CUERPO TÉCNICO</div>
                 <div class="staff-grid">
                   <div class="staff-item"><strong>DT:</strong> ${eq.staff?.dt || '---'}</div>
                   <div class="staff-item"><strong>AC:</strong> ${eq.staff?.ac || '---'}</div>
                   <div class="staff-item"><strong>PF:</strong> ${eq.staff?.pf || '---'}</div>
-                  <div class="staff-item"><strong>Jefe de Equipo:</strong> ${eq.staff?.jefe || '---'}</div>
+                  <div class="staff-item"><strong>Jefe:</strong> ${eq.staff?.jefe || '---'}</div>
                 </div>
               </div>
             </div>
           `).join('')}
-
-          <div style="margin-top: 50px; text-align: center; font-size: 10px; color: #999;">
-            Generado por TJV App - Tigres Rugby Club
-          </div>
         </body>
       </html>
     `;
@@ -108,7 +115,6 @@ const ResumenInscripcion = ({ navigation }) => {
       const win = window.open('', '_blank');
       win.document.write(htmlContent);
       win.document.close();
-
       setTimeout(() => win.print(), 500);
     } else {
       try {
@@ -121,8 +127,12 @@ const ResumenInscripcion = ({ navigation }) => {
   };
 
   const confirmarInscripcion = async () => {
+    if (datosInscripcion.equipos.length === 0) {
+      mostrarAlerta("Error", "Debes agregar al menos un equipo");
+      return;
+    }
     if (!imagenCargada) {
-      Alert.alert("Atención", "Sube el comprobante primero");
+      mostrarAlerta("Atención", "Sube el comprobante primero");
       return;
     }
 
@@ -130,21 +140,22 @@ const ResumenInscripcion = ({ navigation }) => {
     
     try {
       const user = auth.currentUser;
+      const uidFinal = user ? user.uid : "anonimo";
       let urlPublica = "no_image_url";
 
+     
       try {
         const response = await fetch(imagenCargada);
         const blob = await response.blob();
-        const storageRef = ref(storage, `comprobantes/${user?.uid || 'anon'}_${Date.now()}.jpg`);
+        const storageRef = ref(storage, `comprobantes/${uidFinal}_${Date.now()}.jpg`);
         await uploadBytes(storageRef, blob);
         urlPublica = await getDownloadURL(storageRef);
-      } catch (storageError) {
-        console.error("Error en Storage:", storageError);
-        throw new Error("No se pudo subir la imagen del comprobante.");
+      } catch (e) { 
+        console.error("Error Storage:", e); 
       }
 
       const payload = {
-        usuarioId: user ? user.uid : "anonimo",
+        usuarioId: uidFinal,
         club: {
           nombre: datosInscripcion.club.nombre || "Sin nombre",
           ciudad: datosInscripcion.club.ciudad || "Sin ciudad",
@@ -152,70 +163,56 @@ const ResumenInscripcion = ({ navigation }) => {
         equipos: datosInscripcion.equipos.map(eq => ({
           id: String(eq.id),
           nombre: String(eq.nombre),
-          jugadoras: eq.jugadoras.map(j => ({
-            nombre: j.nombre || "",
-            apellido: j.apellido || "",
-            dni: j.dni || "",
-            fechaNac: j.fechaNac || ""
-          })),
-          staff: {
-            dt: eq.staff?.dt || "No asignado",
-            ac: eq.staff?.ac || "No asignado",
-            pf: eq.staff?.pf || "No asignado",
-            jefe: eq.staff?.jefe || "No asignado"
-          }
+          jugadoras: eq.jugadoras,
+          staff: eq.staff || {}
         })),
         comprobanteUrl: urlPublica,
         fechaInscripcion: serverTimestamp(),
         estado: 'Pendiente'
       };
 
-    console.log("Enviando payload a Firestore...");
-    await addDoc(collection(db, "inscripciones"), payload);
-    console.log("Escritura exitosa");
+      await addDoc(collection(db, "inscripciones"), payload);
 
-setEnviando(false);
+      setEnviando(false);
 
-if (Platform.OS === 'web') {
-  window.alert("¡Inscripción exitosa!\nLos datos y el comprobante se enviaron correctamente.");
-  limpiarRegistro();
-  navigation.navigate('Home');
-} else {
-  console.log("INSCRIPCIÓN GUARDADA, MOSTRANDO ALERT");
-
-  Alert.alert(
-    "¡Inscripción Exitosa!",
-    "Los datos y el comprobante se enviaron correctamente.",
-    [
-      {
-        text: "Aceptar",
-        onPress: () => {
-          limpiarRegistro();
-          navigation.navigate('Home');
-        }
+      
+      if (Platform.OS === 'web') {
+        window.alert("¡Éxito! Tu inscripción ha sido enviada.");
+        limpiarRegistro();
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }], 
+        });
+      } else {
+        Alert.alert("¡Éxito!", "Inscripción enviada correctamente", [
+          { 
+            text: "OK", 
+            onPress: () => {
+              limpiarRegistro();
+              navigation.navigate('Home'); 
+            } 
+          }
+        ]);
       }
-    ],
-    { cancelable: false }
-  );
-}
+    } catch (error) {
+      console.error("Error al confirmar:", error);
+      setEnviando(false);
+      mostrarAlerta("Error", "Hubo un problema al guardar los datos");
+    }
+  }; 
 
-  } catch (error) {
-    setEnviando(false);
-    Alert.alert("Error", error.message);
-  }
-};
   return (
     <ScrollView style={globalStyles.mainContainer}>
       <View style={globalStyles.scrollContent}>
         <Text style={globalStyles.title}>Resumen y Envío</Text>
 
         <View style={styles.resumenCard}>
-          <Text style={styles.resumenClub}>{datosInscripcion.club.nombre}</Text>
-          <Text style={styles.resumenCiudad}>{datosInscripcion.club.ciudad}</Text>
+          <Text style={styles.resumenClub}>{datosInscripcion.club?.nombre || 'Club no definido'}</Text>
+          <Text style={styles.resumenCiudad}>{datosInscripcion.club?.ciudad || 'Ciudad no definida'}</Text>
           <View style={styles.divider} />
           <Text style={styles.labelEquipos}>Equipos a inscribir:</Text>
-          {datosInscripcion.equipos.map((eq, i) => (
-            <Text key={i} style={styles.equipoItem}>✅ {eq.nombre} ({eq.jugadoras.length} jugadoras)</Text>
+          {datosInscripcion.equipos?.map((eq, i) => (
+            <Text key={i} style={styles.equipoItem}>✅ {eq.nombre} ({eq.jugadoras?.length || 0} jugadoras)</Text>
           ))}
         </View>
 
@@ -235,7 +232,7 @@ if (Platform.OS === 'web') {
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[globalStyles.input, { backgroundColor: '#D32F2F', marginTop: 30, alignItems: 'center' }]} 
+          style={[globalStyles.input, { backgroundColor: '#D32F2F', marginTop: 30, alignItems: 'center', justifyContent: 'center' }]} 
           onPress={confirmarInscripcion}
           disabled={enviando}
         >
@@ -249,6 +246,7 @@ if (Platform.OS === 'web') {
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   resumenCard: { backgroundColor: '#fff', padding: 20, borderRadius: 15, elevation: 3, marginBottom: 20 },

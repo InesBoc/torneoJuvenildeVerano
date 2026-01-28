@@ -38,7 +38,8 @@ export default function DetalleInscripcionScreen({ route, navigation }) {
             <View style={styles.staffBox}>
               <Text style={styles.staffText}><Text style={{fontWeight:'bold'}}>DT:</Text> {equipo.staff.dt || 'No asignado'}</Text>
               <Text style={styles.staffText}><Text style={{fontWeight:'bold'}}>AC:</Text> {equipo.staff.ac || 'No asignado'}</Text>
-              <Text style={styles.staffText}><Text style={{fontWeight:'bold'}}>Delegado:</Text> {equipo.staff.jefe || 'No asignado'}</Text>
+              <Text style={styles.staffText}><Text style={{fontWeight:'bold'}}>PF:</Text> {equipo.staff.pf || 'No asignado'}</Text>
+              <Text style={styles.staffText}><Text style={{fontWeight:'bold'}}>JE:</Text> {equipo.staff.jefe || 'No asignado'}</Text>
             </View>
           </View>
         ))}

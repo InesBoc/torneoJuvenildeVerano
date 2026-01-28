@@ -16,36 +16,39 @@ const ListaEquiposScreen = ({ navigation }) => {
 
 useEffect(() => {
   if (!hayInscripcionActiva) return;
-  if (datosInscripcion.equipos && datosInscripcion.equipos.length > 0) {
-    const equiposMapeados = datosInscripcion.equipos.map(eq => ({
-      id: eq.id,
-      nombre: eq.nombre,
-      categoria: eq.categoria || (eq.id.includes('Sub14') ? 'Sub 14' : 'Sub 16'),
-      completado: eq.jugadoras.length >= 7,
-      cantJugadores: eq.jugadoras.length
-    }));
-    setEquiposGenerados(equiposMapeados);
-  } else {
-    const { nombre, cantSub14, cantSub16 } = datosInscripcion.club;
-    const iniciales = [];
 
-    const generar = (cantidad, categoria) => {
-      for (let i = 0; i < cantidad; i++) {
-        const letra = cantidad > 1 ? ` ${String.fromCharCode(65 + i)}` : '';
+  const { nombre, cantSub14, cantSub16 } = datosInscripcion.club;
+  const iniciales = [];
+
+  const generar = (cantidad, categoria) => {
+    for (let i = 0; i < cantidad; i++) {
+      const letra = cantidad > 1 ? ` ${String.fromCharCode(65 + i)}` : '';
+      const idGenerado = `${categoria.replace(/\s+/g, "")}-${i}`;
+
+      const equipoExistente = datosInscripcion.equipos?.find(e => e.id === idGenerado);
+
+      if (equipoExistente) {
         iniciales.push({
-          id: `${categoria.replace(" ", "")}-${i}`,
+          ...equipoExistente,
+          id: idGenerado,
+          completado: equipoExistente.jugadoras.length >= 7,
+          cantJugadores: equipoExistente.jugadoras.length
+        });
+      } else {
+        iniciales.push({
+          id: idGenerado,
           nombre: `${nombre} - ${categoria}${letra}`,
           categoria: categoria,
           completado: false,
           cantJugadores: 0
         });
       }
-    };
+    }
+  };
 
-    generar(cantSub14, 'Sub 14');
-    generar(cantSub16, 'Sub 16');
-    setEquiposGenerados(iniciales);
-  }
+  generar(cantSub14, 'Sub 14');
+  generar(cantSub16, 'Sub 16');
+  setEquiposGenerados(iniciales);
 }, [datosInscripcion.equipos, hayInscripcionActiva]);
 
   const renderEquipo = ({ item }) => {

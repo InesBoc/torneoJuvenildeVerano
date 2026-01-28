@@ -18,6 +18,8 @@ import MisInscripcionesScreen from './src/screens/MisInscripcionesScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import AdminDashboard from './src/screens/AdminDashboard';
 import DetalleInscripcionScreen from './src/screens/DetalleInscripcionScreen';
+import FixtureScreen from './src/screens/FixtureScreen';
+import AdminFixtureScreen from './src/screens/AdminFixtureScreen';
 
 
 const Stack = createStackNavigator();
@@ -66,6 +68,11 @@ const Stack = createStackNavigator();
             options={{ title: 'Historial' }} 
           />
           <Stack.Screen 
+            name="Fixture" 
+            component={FixtureScreen} 
+            options={{ title: '🏆Fixture y Posiciones' }} 
+          />
+          <Stack.Screen 
             name="DetalleInscripcion" 
             component={DetalleInscripcionScreen} 
             options={{ title: 'Detalle de la Lista' }} 
@@ -97,6 +104,11 @@ const Stack = createStackNavigator();
               ),
               headerLeft: () => null, 
             })} 
+          />
+          <Stack.Screen 
+          name="AdminFixture" 
+          component={AdminFixtureScreen} 
+          options={{ title: 'Cargar Resultados' }} 
           />
         </Stack.Navigator>
       </NavigationContainer>

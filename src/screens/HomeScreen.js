@@ -10,7 +10,7 @@ import MapaProxy from '../components/MapaProxy';
 export default function HomeScreen({ navigation }) {
   return (
     <ScrollView style={globalStyles.mainContainer}>
-      <View style={[globalStyles.scrollContent, { paddingBottom: 40 }]}>
+      <View style={[globalStyles.scrollContent, { paddingBottom: 80 }]}>
         
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <Text style={globalStyles.title}>Torneo Juvenil de Verano 2026</Text>
@@ -40,7 +40,12 @@ export default function HomeScreen({ navigation }) {
           >
             <Text style={globalStyles.btnText}>Ver Mis Inscripciones</Text>
           </TouchableOpacity>
-
+          <TouchableOpacity 
+            style={[globalStyles.input, { backgroundColor: '#f7a684', alignItems: 'center' }]}
+            onPress={() => navigation.navigate('Fixture')}
+          >
+            <Text style={globalStyles.btnText}>🏆 FIXTURE Y POSICIONES</Text>
+          </TouchableOpacity>
           <TouchableOpacity 
             style={[globalStyles.input, { backgroundColor: '#a69a95', alignItems: 'center' }]} 
             onPress={() => navigation.navigate('Login')}
@@ -56,4 +61,5 @@ export default function HomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   map: {height: 200, width: '100%', borderRadius: 10, marginVertical: 10},
+
 });

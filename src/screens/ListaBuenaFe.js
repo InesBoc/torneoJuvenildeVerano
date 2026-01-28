@@ -7,15 +7,17 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  Platform } from 'react-native';
+  Platform
+} from 'react-native';
 import { useInscripcion } from '../context/InscripcionContext';
 import { globalStyles } from '../styles/globalStyles';
 
 const ListaBuenaFe = ({ route, navigation }) => {
-
   const { nombreEquipo, equipoId } = route.params;
   const { guardarEquipo, datosInscripcion } = useInscripcion();
+ 
   const equipoExistente = datosInscripcion.equipos.find(e => e.id === equipoId);
+  
   const [nuevaJugadora, setNuevaJugadora] = useState({ apellido: '', nombre: '', dni: '', fechaNac: '' });
   const [jugadoras, setJugadoras] = useState(equipoExistente?.jugadoras || []);
   const [staff, setStaff] = useState(equipoExistente?.staff || { dt: '', ac: '', pf: '', jefe: '' });
@@ -55,27 +57,19 @@ const ListaBuenaFe = ({ route, navigation }) => {
     }
 
     const partes = fechaNac.split('/');
-    const dia = parseInt(partes[0]);
-    const mes = parseInt(partes[1]);
     const anio = parseInt(partes[2]);
 
-    if (dia < 1 || dia > 31 || mes < 1 || mes > 12) {
-      mostrarAlerta("Error", "Fecha inválida.");
-      return;
-    }
-
     if (categoriaAuto === "Sub 14") {
-    if (anio < 2012 || anio > 2014) {
-      mostrarAlerta("Categoría Sub 14", "Para Sub 14, deben ser nacidas entre 2012 y 2014.");
-      return;
+      if (anio < 2012 || anio > 2014) {
+        mostrarAlerta("Categoría Sub 14", "Deben ser nacidas entre 2012 y 2014.");
+        return;
+      }
+    } else {
+      if (anio < 2010 || anio > 2013) {
+        mostrarAlerta("Categoría Sub 16", "Deben ser nacidas entre 2010 y 2013.");
+        return;
+      }
     }
-  } else {
-   
-    if (anio < 2010 || anio > 2013) {
-      mostrarAlerta("Categoría Sub 16", "Para Sub 16, deben ser nacidas entre 2010 y 2013.");
-      return;
-    }
-  }
 
     if (jugadoras.find(j => j.dni === dni)) {
       mostrarAlerta("Duplicado", "Este DNI ya está en la lista.");
@@ -84,38 +78,32 @@ const ListaBuenaFe = ({ route, navigation }) => {
 
     setJugadoras([...jugadoras, { ...nuevaJugadora, id: Date.now().toString() }]);
     setNuevaJugadora({ apellido: '', nombre: '', dni: '', fechaNac: '' });
-
-    if (jugadoras.length >= 19) { 
-      inputDT.current?.focus(); 
-    }
   };
 
   const finalizarCarga = () => {
-    const esValido = jugadoras.length >= 7 && jugadoras.length <= 20;
-    
+    const esValido = jugadoras.length >= 7;
+    const categoriaAuto = nombreEquipo.includes("14") ? "Sub 14" : "Sub 16";
+
     guardarEquipo({ 
       id: equipoId, 
       nombre: nombreEquipo, 
+      categoria: categoriaAuto,
       jugadoras, 
       staff, 
       completado: esValido 
     });
 
     if (esValido) {
-      mostrarAlerta("Éxito", "Lista de buena fe guardada correctamente.");
-      navigation.goBack(); 
+      mostrarAlerta("Éxito", "Lista guardada correctamente.");
     } else {
-      mostrarAlerta("Progreso Guardado", `Se guardaron ${jugadoras.length} jugadoras. Mínimo requerido: 7.`);
-      navigation.goBack();
+      mostrarAlerta("Progreso Guardado", `Faltan jugadoras (Mínimo 7). Llevas ${jugadoras.length}.`);
     }
+    navigation.goBack();
   };
+
   return (
     <View style={globalStyles.mainContainer}>
-      <ScrollView 
-        style={{ flex: 1 }}
-        contentContainerStyle={globalStyles.scrollContent}
-        showsVerticalScrollIndicator={true}
-      >
+      <ScrollView contentContainerStyle={globalStyles.scrollContent}>
         <Text style={styles.header}>{nombreEquipo}</Text>
 
         <View style={styles.formCard}>
@@ -156,7 +144,7 @@ const ListaBuenaFe = ({ route, navigation }) => {
         </View>
 
         <View style={styles.listSection}>
-          <Text style={styles.listTitle}>2. Jugadoras ({jugadoras.length}) - Mínimo 7</Text>
+          <Text style={styles.listTitle}>2. Jugadoras ({jugadoras.length})</Text>
           {jugadoras.map((item, index) => (
             <View key={item.id} style={styles.itemJugadora}>
               <Text style={styles.indexNumber}>{index + 1}.</Text>
@@ -169,49 +157,21 @@ const ListaBuenaFe = ({ route, navigation }) => {
               </TouchableOpacity>
             </View>
           ))}
-          {jugadoras.length === 0 && <Text style={styles.emptyText}>No hay jugadoras en la lista</Text>}
         </View>
 
         <View style={styles.staffCard}>
           <Text style={styles.sectionTitle}>3. Cuerpo Técnico</Text>
-          <TextInput 
-            ref={inputDT} 
-            style={globalStyles.input} 
-            placeholder="Director Técnico" 
-            value={staff.dt} 
-            onChangeText={(v) => setStaff({...staff, dt: v})} 
-          />
-          <TextInput 
-            ref={inputAC} 
-            style={globalStyles.input} 
-            placeholder="Ayudante de Campo" 
-            value={staff.ac} 
-            onChangeText={(v) => setStaff({...staff, ac: v})} 
-          />
-          <TextInput 
-            ref={inputPF} 
-            style={globalStyles.input} 
-            placeholder="Preparador Físico"
-            value={staff.pf} 
-            onChangeText={(v) => setStaff({...staff, pf: v})} 
-          />
-          <TextInput 
-            ref={inputJE} 
-            style={globalStyles.input} 
-            placeholder="Jefe de Equipo" 
-            value={staff.jefe} 
-            onChangeText={(v) => setStaff({...staff, jefe: v})} 
-          />
+          <TextInput style={globalStyles.input} placeholder="Director Técnico" value={staff.dt} onChangeText={(v) => setStaff({...staff, dt: v})} />
+          <TextInput style={globalStyles.input} placeholder="Ayudante de Campo" value={staff.ac} onChangeText={(v) => setStaff({...staff, ac: v})} />
+          <TextInput style={globalStyles.input} placeholder="Preparador Físico" value={staff.pf} onChangeText={(v) => setStaff({...staff, pf: v})} />
+          <TextInput style={globalStyles.input} placeholder="Jefe de Equipo" value={staff.jefe} onChangeText={(v) => setStaff({...staff, jefe: v})} />
         </View>
 
         <TouchableOpacity 
-          style={[
-            globalStyles.btnFinalizar, 
-            { backgroundColor: jugadoras.length >= 7 ? '#D32F2F' : '#666', marginTop: 30 }
-          ]} 
+          style={[globalStyles.input, { backgroundColor: jugadoras.length >= 7 ? '#D32F2F' : '#666', marginTop: 30, alignItems: 'center' }]} 
           onPress={finalizarCarga}
         >
-          <Text style={globalStyles.btnFinalizar}>FINALIZAR CARGA DE EQUIPO</Text>
+          <Text style={globalStyles.btnText}>FINALIZAR CARGA</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -231,7 +191,6 @@ const styles = StyleSheet.create({
   itemTextBold: { fontWeight: 'bold', fontSize: 14 },
   itemSubtext: { fontSize: 12, color: '#666' },
   btnQuitar: { color: 'red', fontSize: 12 },
-  emptyText: { textAlign: 'center', color: '#AAA', fontStyle: 'italic', marginVertical: 20 },
   staffCard: { marginTop: 20, padding: 15, backgroundColor: '#F9F9F9', borderRadius: 10 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 }
 });

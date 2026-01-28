@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const inscripcionInicial = {
   club: {
@@ -17,6 +18,33 @@ const InscripcionContext = createContext();
 
 export const InscripcionProvider = ({ children }) => {
   const [datosInscripcion, setDatosInscripcion] = useState(inscripcionInicial);
+
+  useEffect(() => {
+    const recuperarDatos = async () => {
+      try {
+        const guardado = await AsyncStorage.getItem('@registro_tjv');
+        if (guardado) {
+          setDatosInscripcion(JSON.parse(guardado));
+        }
+      } catch (e) {
+        console.error("Error recuperando persistencia", e);
+      }
+    };
+    recuperarDatos();
+  }, []);
+
+  useEffect(() => {
+    const guardarEnTelefono = async () => {
+      try {
+        await AsyncStorage.setItem('@registro_tjv', JSON.stringify(datosInscripcion));
+      } catch (e) {
+        console.error("Error guardando datos", e);
+      }
+    };
+    if (datosInscripcion !== inscripcionInicial) {
+        guardarEnTelefono();
+    }
+  }, [datosInscripcion]);
 
   const actualizarClub = (info) => {
     setDatosInscripcion(prev => ({ 
@@ -41,7 +69,13 @@ export const InscripcionProvider = ({ children }) => {
     });
   };
 
-  const limpiarRegistro = () => {
+  const limpiarRegistro = async () => {
+
+    try {
+      await AsyncStorage.removeItem('@registro_tjv');
+    } catch (e) {
+      console.error("Error al limpiar persistencia", e);
+    }
     setDatosInscripcion(inscripcionInicial);
   };
 
