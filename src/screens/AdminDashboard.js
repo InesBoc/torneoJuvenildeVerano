@@ -59,6 +59,7 @@ useEffect(() => {
       <FlatList
         data={inscripciones}
         keyExtractor={item => item.id}
+        contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={
           <View>
             <TouchableOpacity 

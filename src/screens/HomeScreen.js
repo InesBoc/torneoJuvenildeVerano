@@ -9,8 +9,14 @@ import MapaProxy from '../components/MapaProxy';
 
 export default function HomeScreen({ navigation }) {
   return (
-    <ScrollView style={globalStyles.mainContainer}>
-      <View style={[globalStyles.scrollContent, { paddingBottom: 80 }]}>
+    <ScrollView 
+      style={{ flex: 1 }} 
+      contentContainerStyle={{ 
+        paddingBottom: 100,
+        paddingHorizontal: 20 
+      }}
+    >
+      <View style={globalStyles.scrollContent}>
         
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <Text style={globalStyles.title}>Torneo Juvenil de Verano 2026</Text>
