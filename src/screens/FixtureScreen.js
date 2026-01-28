@@ -115,7 +115,7 @@ const FixtureScreen = () => {
 
             {['A', 'B'].map((zona) => (
               <View key={zona} style={{ marginBottom: 30 }}>
-                <Text style={styles.subTitulo}>ZONA {zona} {zona === 'A' ? '(Impares)' : '(Pares)'}</Text>
+                <Text style={styles.subTitulo}>ZONA {zona} </Text>
                 <View style={styles.tablaContainer}>
                   <View style={styles.tablaHeader}>
                     <Text style={[styles.colEquipo, { color: 'white' }]}>Equipo</Text>
