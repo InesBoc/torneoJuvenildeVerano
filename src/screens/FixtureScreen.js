@@ -92,7 +92,7 @@ const FixtureScreen = () => {
           <>
             <Text style={styles.tituloSeccion}>Resultados {categoriaVisible}</Text>
             {partidos.map((item) => (
-              <View key={item.id} style={styles.tarjetaPartido}>
+              <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
                 <View style={styles.infoHora}>
                   <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia || 'Sáb'}</Text>
                   <Text style={styles.horaText}>{item.hora}</Text>  

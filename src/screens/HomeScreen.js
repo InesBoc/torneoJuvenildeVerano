@@ -9,13 +9,12 @@ import MapaProxy from '../components/MapaProxy';
 
 export default function HomeScreen({ navigation }) {
   return (
-    <ScrollView 
-      style={{ flex: 1 }} 
-      contentContainerStyle={{ 
-        paddingBottom: 100,
-        paddingHorizontal: 20 
-      }}
-    >
+    <View style={[globalStyles.mainContainer, { flex: 1 }]}>
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={[globalStyles.scrollContent, { paddingBottom: 100 }]} 
+        showsVerticalScrollIndicator={true}
+      >
       <View style={globalStyles.scrollContent}>
         
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
@@ -62,6 +61,7 @@ export default function HomeScreen({ navigation }) {
 
       </View>
     </ScrollView>
+    </View>
   );
 }
 
