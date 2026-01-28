@@ -31,17 +31,15 @@ const DatosClubScreen = ({ navigation }) => {
   const [cantSub16, setCantSub16] = useState(0);
 
   const continuar = () => {
-    
-    if (!nombre || !ciudad || (cantSub14 === 0 && cantSub16 === 0)) {
+    if (!nombre || !ciudad || (parseInt(cantSub14) === 0 && parseInt(cantSub16) === 0)) {
       Alert.alert("Error", "Por favor completa el nombre, ciudad y selecciona al menos un equipo.");
       return;
     }
-    limpiarRegistro();
     actualizarClub({ 
-      nombre, 
-      ciudad, 
-      cantSub14: parseInt(cantSub14), 
-      cantSub16: parseInt(cantSub16) 
+      nombre: nombre.trim(), 
+      ciudad: ciudad.trim(), 
+      cantSub14: parseInt(cantSub14) || 0, 
+      cantSub16: parseInt(cantSub16) || 0 
     });
     navigation.navigate('ListaEquipos');
   };
