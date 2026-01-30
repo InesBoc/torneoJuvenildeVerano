@@ -6,7 +6,7 @@ import { View,
         StyleSheet,
         TouchableOpacity, 
         Linking, 
-        Alert } from 'react-native';
+        Platform } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -23,7 +23,7 @@ const SPONSORS = [
     link: 'https://instagram.com/veta.solutions' },
   { id: '4', 
     image: require('../../assets/avg.png'),
-    link: 'https://instagram.com/grupoavg' },
+    link: 'https://instagram.com/grupoagv' },
 ];
 
 export default function SponsorCarousel() {
@@ -36,12 +36,13 @@ export default function SponsorCarousel() {
   index,
 });
 
-  const handlePress = async (url) => {
+  const handlePress = (url) => {
   if (!url) return;
-  try {
-    await Linking.openURL(url);
-  } catch (error) {
-    console.error("Error al intentar abrir el enlace:", error);
+
+  if (Platform.OS === 'web') {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } else {
+    Linking.openURL(url).catch(err => console.error("Error", err));
   }
 };
 
@@ -82,7 +83,13 @@ export default function SponsorCarousel() {
 }
 
 const styles = StyleSheet.create({
-  container: { height: 100, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#eee', marginBottom: 50 },
+  container: { height: 100, 
+    backgroundColor: '#fff', 
+    borderTopWidth: 1, 
+    borderColor: '#eee', 
+    marginBottom: 50,
+    zIndex: 999, 
+    elevation: 5 },
   card: { width: width, justifyContent: 'center', alignItems: 'center' },
   logo: { width: width * 0.7, height: 80 },
 });
