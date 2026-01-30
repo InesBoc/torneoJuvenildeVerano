@@ -6,6 +6,7 @@ import { View,
         StyleSheet } from 'react-native';
 import { globalStyles } from '../styles/globalStyles'; 
 import MapaProxy from '../components/MapaProxy'; 
+import SponsorCarousel from '../components/SponsorCarousel';
 
 export default function HomeScreen({ navigation }) {
   return (
@@ -19,6 +20,7 @@ export default function HomeScreen({ navigation }) {
         
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <Text style={globalStyles.title}>Torneo Juvenil de Verano 2026</Text>
+           <Text style={[globalStyles.title, { fontSize: 20, marginVertical: 10 }]}>14 y 15 de Febrero</Text>
           <Text style={globalStyles.subtitle}>¡Bienvenidos al 1° Torneo Juvenil de Verano de Tigres Rugby Club!
                       Este Torneo fue creado para hacer un cierre de Pretemporada reforzando tanto el aspecto fisico-deportivo como la integración del grupo y el trabajo en equipo.
                     </Text>
@@ -61,6 +63,7 @@ export default function HomeScreen({ navigation }) {
 
       </View>
     </ScrollView>
+    <SponsorCarousel />
     </View>
   );
 }

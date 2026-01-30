@@ -7,6 +7,7 @@ import { View,
           TouchableOpacity, 
           Alert } from 'react-native';
 import { useInscripcion } from '../context/InscripcionContext';
+import { globalStyles } from '../styles/globalStyles';
 
 const DatosClubScreen = ({ navigation }) => {
   
@@ -45,7 +46,8 @@ const DatosClubScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={globalStyles.mainContainer}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={globalStyles.scrollContent}>
       <Text style={styles.title}>Inscripción de Equipos</Text>
       
       <View style={styles.form}>
@@ -92,6 +94,7 @@ const DatosClubScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </View>
   );
 };
 

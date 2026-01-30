@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 import { globalStyles } from '../styles/globalStyles';
 import { db } from '../services/firebase'; 
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';import SponsorCarousel from '../components/SponsorCarousel';
 
 const FixtureScreen = () => {
   const [categoriaVisible, setCategoriaVisible] = useState('Sub 14');
@@ -90,8 +90,8 @@ const FixtureScreen = () => {
           <ActivityIndicator size="large" color="#D32F2F" />
         ) : (
           <>
-            <Text style={styles.tituloSeccion}>Resultados {categoriaVisible}</Text>
-            {partidos.map((item) => (
+            <Text style={styles.tituloSeccion}>Fase de Zona {categoriaVisible}</Text>
+            {partidos.filter(p => Number(p.partido) <= 12).map((item) => (
               <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
                 <View style={styles.infoHora}>
                   <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia || 'Sáb'}</Text>
@@ -147,6 +147,7 @@ const FixtureScreen = () => {
               <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
                 <View style={styles.infoHora}>
                    <Text style={styles.horaText}>{item.hora}</Text>
+                   <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
                    <Text style={[styles.canchaText, { color: '#D32F2F' }]}>P. {item.partido}</Text>
                 </View>
                 <View style={styles.equiposContainer}>
@@ -159,6 +160,7 @@ const FixtureScreen = () => {
           </>
         )}
       </ScrollView>
+      <SponsorCarousel />
     </View>
   );
 };
