@@ -5,7 +5,6 @@ import {
   TouchableOpacity, 
   ScrollView, 
   StyleSheet,
-  Platform,
   useWindowDimensions
 } from 'react-native';
 import { globalStyles } from '../styles/globalStyles'; 

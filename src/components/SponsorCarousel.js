@@ -87,8 +87,8 @@ const styles = StyleSheet.create({
     alignItems: 'center' 
   },
   imageWrapper: {
-    width: '85%', // Un poco de aire a los costados
-    height: 60,    // Un poco de aire arriba y abajo (carrusel tiene 100)
+    width: '85%',
+    height: 60,    
     justifyContent: 'center',
     alignItems: 'center',
   },

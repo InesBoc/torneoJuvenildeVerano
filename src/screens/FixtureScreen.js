@@ -7,8 +7,7 @@ import {
   TouchableOpacity, 
   Linking, 
   ActivityIndicator,
-  useWindowDimensions,
-  Platform 
+  useWindowDimensions, 
 } from 'react-native';
 import { globalStyles } from '../styles/globalStyles';
 import { db } from '../services/firebase'; 
@@ -21,8 +20,7 @@ const FixtureScreen = () => {
   const [posiciones, setPosiciones] = useState({ A: [], B: [] }); 
   const [cargando, setCargando] = useState(true);
 
-  const { height, width } = useWindowDimensions();
-  const scrollHeight = height - 100;
+  const { height } = useWindowDimensions();
 
   useEffect(() => {
     setCargando(true);
@@ -73,10 +71,9 @@ const FixtureScreen = () => {
   };
 
   return (
-  
-  <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, height: height, backgroundColor: '#fff' }}>
 
-     <View style={{ 
+      <View style={{ 
         position: 'absolute', 
         top: 0, 
         left: 0, 
@@ -84,100 +81,98 @@ const FixtureScreen = () => {
         bottom: 100, 
       }}>
         <ScrollView
-         showsVerticalScrollIndicator={true}
-         contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={true}
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-        <View style={[globalStyles.scrollContent, { 
-            paddingBottom: 20,
-            paddingBottom: Platform.OS === 'web' ? 20 : 20 
-          }]}>
-          <TouchableOpacity style={styles.btnPdf} onPress={descargarPDF}>
-            <Text style={styles.btnPdfText}>📄 DESCARGAR FIXTURE COMPLETO (PDF)</Text>
-          </TouchableOpacity>
+ 
+          <View style={[globalStyles.scrollContent, { paddingBottom: 20 }]}>
+            <TouchableOpacity style={styles.btnPdf} onPress={descargarPDF}>
+              <Text style={styles.btnPdfText}>📄 DESCARGAR FIXTURE COMPLETO (PDF)</Text>
+            </TouchableOpacity>
 
-          <View style={styles.selectorContainer}>
-            {['Sub 14', 'Sub 16'].map(cat => (
-              <TouchableOpacity 
-                key={cat}
-                style={[styles.btnSelector, categoriaVisible === cat && styles.btnActive]}
-                onPress={() => setCategoriaVisible(cat)}
-              >
-                <Text style={[styles.textSelector, categoriaVisible === cat && styles.textActive]}>{cat.toUpperCase()}</Text>
-              </TouchableOpacity>
-            ))}
+            <View style={styles.selectorContainer}>
+              {['Sub 14', 'Sub 16'].map(cat => (
+                <TouchableOpacity 
+                  key={cat}
+                  style={[styles.btnSelector, categoriaVisible === cat && styles.btnActive]}
+                  onPress={() => setCategoriaVisible(cat)}
+                >
+                  <Text style={[styles.textSelector, categoriaVisible === cat && styles.textActive]}>{cat.toUpperCase()}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {cargando ? (
+              <ActivityIndicator size="large" color="#D32F2F" />
+            ) : (
+              <>
+                <Text style={styles.tituloSeccion}>Fase de Zona {categoriaVisible}</Text>
+                {partidos.filter(p => Number(p.partido) <= 12).map((item) => (
+                  <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
+                    <View style={styles.infoHora}>
+                      <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia || 'Sáb'}</Text>
+                      <Text style={styles.horaText}>{item.hora}</Text>  
+                      <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
+                      <Text style={[styles.canchaText, { color: '#D32F2F', fontWeight: 'bold' }]}>P. {item.partido}</Text>
+                    </View>
+                    <View style={styles.equiposContainer}>
+                      <Text style={styles.equipoText}>{item.local}</Text>
+                      <View style={styles.marcadorBox}>
+                        <Text style={styles.golesTexto}>
+                          {item.jugado ? `${item.golesLocal} - ${item.golesVisitante}` : 'VS'}
+                        </Text>
+                      </View>
+                      <Text style={styles.equipoText}>{item.visitante}</Text>
+                    </View>
+                  </View>
+                ))}
+
+                <Text style={[styles.tituloSeccion, { marginTop: 30 }]}>Tablas de Posiciones {categoriaVisible}</Text>
+                {['A', 'B'].map((zona) => (
+                  <View key={zona} style={{ marginBottom: 30 }}>
+                    <Text style={styles.subTitulo}>ZONA {zona} </Text>
+                    <View style={styles.tablaContainer}>
+                      <View style={styles.tablaHeader}>
+                        <Text style={[styles.colEquipo, { color: 'white' }]}>Equipo</Text>
+                        <Text style={[styles.colDato, { color: 'white' }]}>PTS</Text>
+                        <Text style={[styles.colDato, { color: 'white' }]}>PJ</Text>
+                        <Text style={[styles.colDato, { color: 'white' }]}>DG</Text>
+                      </View>
+                      {posiciones[zona].length === 0 ? (
+                        <Text style={{padding: 20, textAlign: 'center', color: '#999'}}>No hay partidos jugados aún.</Text>
+                      ) : (
+                        posiciones[zona].map((item, index) => (
+                          <View key={index} style={[styles.tablaFila, index % 2 === 0 ? { backgroundColor: '#F9F9F9' } : { backgroundColor: '#FFF' }]}>
+                            <Text style={styles.colEquipo}>{index + 1}. {item.equipo}</Text>
+                            <Text style={[styles.colDato, { fontWeight: 'bold' }]}>{item.pts}</Text>
+                            <Text style={styles.colDato}>{item.pj}</Text>
+                            <Text style={styles.colDato}>{item.dg}</Text>
+                          </View>
+                        ))
+                      )}
+                    </View>
+                  </View>
+                ))}
+
+                <View style={styles.divider} />
+                <Text style={styles.tituloSeccion}>Fases Finales (Dom)</Text>
+                {partidos.filter(p => Number(p.partido) > 12).map(item => (
+                  <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
+                    <View style={styles.infoHora}>
+                       <Text style={styles.horaText}>{item.hora}</Text>
+                       <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
+                       <Text style={[styles.canchaText, { color: '#D32F2F' }]}>P. {item.partido}</Text>
+                    </View>
+                    <View style={styles.equiposContainer}>
+                      <Text style={styles.equipoText}>{item.local}</Text>
+                      <Text style={styles.vsText}>{item.jugado ? `${item.golesLocal} - ${item.golesVisitante}` : 'VS'}</Text>
+                      <Text style={styles.equipoText}>{item.visitante}</Text>
+                    </View>
+                  </View>
+                ))}
+              </>
+            )}
           </View>
-
-          {cargando ? (
-            <ActivityIndicator size="large" color="#D32F2F" />
-          ) : (
-            <>
-              <Text style={styles.tituloSeccion}>Fase de Zona {categoriaVisible}</Text>
-              {partidos.filter(p => Number(p.partido) <= 12).map((item) => (
-                <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
-                  <View style={styles.infoHora}>
-                    <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia || 'Sáb'}</Text>
-                    <Text style={styles.horaText}>{item.hora}</Text>  
-                    <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
-                    <Text style={[styles.canchaText, { color: '#D32F2F', fontWeight: 'bold' }]}>P. {item.partido}</Text>
-                  </View>
-                  <View style={styles.equiposContainer}>
-                    <Text style={styles.equipoText}>{item.local}</Text>
-                    <View style={styles.marcadorBox}>
-                      <Text style={styles.golesTexto}>
-                        {item.jugado ? `${item.golesLocal} - ${item.golesVisitante}` : 'VS'}
-                      </Text>
-                    </View>
-                    <Text style={styles.equipoText}>{item.visitante}</Text>
-                  </View>
-                </View>
-              ))}
-
-              <Text style={[styles.tituloSeccion, { marginTop: 30 }]}>Tablas de Posiciones {categoriaVisible}</Text>
-              {['A', 'B'].map((zona) => (
-                <View key={zona} style={{ marginBottom: 30 }}>
-                  <Text style={styles.subTitulo}>ZONA {zona} </Text>
-                  <View style={styles.tablaContainer}>
-                    <View style={styles.tablaHeader}>
-                      <Text style={[styles.colEquipo, { color: 'white' }]}>Equipo</Text>
-                      <Text style={[styles.colDato, { color: 'white' }]}>PTS</Text>
-                      <Text style={[styles.colDato, { color: 'white' }]}>PJ</Text>
-                      <Text style={[styles.colDato, { color: 'white' }]}>DG</Text>
-                    </View>
-                    {posiciones[zona].length === 0 ? (
-                      <Text style={{padding: 20, textAlign: 'center', color: '#999'}}>No hay partidos jugados aún.</Text>
-                    ) : (
-                      posiciones[zona].map((item, index) => (
-                        <View key={index} style={[styles.tablaFila, index % 2 === 0 ? { backgroundColor: '#F9F9F9' } : { backgroundColor: '#FFF' }]}>
-                          <Text style={styles.colEquipo}>{index + 1}. {item.equipo}</Text>
-                          <Text style={[styles.colDato, { fontWeight: 'bold' }]}>{item.pts}</Text>
-                          <Text style={styles.colDato}>{item.pj}</Text>
-                          <Text style={styles.colDato}>{item.dg}</Text>
-                        </View>
-                      ))
-                    )}
-                  </View>
-                </View>
-              ))}
-
-              <View style={styles.divider} />
-              <Text style={styles.tituloSeccion}>Fases Finales (Dom)</Text>
-              {partidos.filter(p => Number(p.partido) > 12).map(item => (
-                <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
-                  <View style={styles.infoHora}>
-                     <Text style={styles.horaText}>{item.hora}</Text>
-                     <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
-                     <Text style={[styles.canchaText, { color: '#D32F2F' }]}>P. {item.partido}</Text>
-                  </View>
-                  <View style={styles.equiposContainer}>
-                    <Text style={styles.equipoText}>{item.local}</Text>
-                    <Text style={styles.vsText}>{item.jugado ? `${item.golesLocal} - ${item.golesVisitante}` : 'VS'}</Text>
-                    <Text style={styles.equipoText}>{item.visitante}</Text>
-                  </View>
-                </View>
-              ))}
-            </>
-          )}
-           </View>
         </ScrollView>
       </View>
 
@@ -194,6 +189,7 @@ const FixtureScreen = () => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
  footerContainer: {
