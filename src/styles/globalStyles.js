@@ -54,4 +54,12 @@ export const globalStyles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 25, 
     textAlign: 'center' },
+  footerCarousel: {
+    position: 'relative',
+    bottom: 0,
+    width: '100%',
+    zIndex: 9999, 
+    elevation: 10, 
+    backgroundColor: '#fff',
+  }
 });

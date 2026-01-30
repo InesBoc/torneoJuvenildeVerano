@@ -160,7 +160,9 @@ const FixtureScreen = () => {
           </>
         )}
       </ScrollView>
-      <SponsorCarousel />
+      <View style={globalStyles.footerCarousel}>
+        <SponsorCarousel />
+      </View>
     </View>
   );
 };
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
   colDato: { flex: 1, textAlign: 'center', fontSize: 14 },
   subTitulo: { fontSize: 16, fontWeight: 'bold', color: '#444', marginBottom: 10, textAlign: 'center', backgroundColor: '#eee', padding: 5, borderRadius: 5 },
   divider: { height: 2, backgroundColor: '#D32F2F', marginVertical: 30, opacity: 0.2 },
-  vsText: { fontWeight: 'bold', color: '#D32F2F', fontSize: 14 }
+  vsText: { fontWeight: 'bold', color: '#D32F2F', fontSize: 14 },
 });
 
 export default FixtureScreen;

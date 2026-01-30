@@ -24,6 +24,9 @@ const SPONSORS = [
   { id: '4', 
     image: require('../../assets/avg.png'),
     link: 'https://instagram.com/grupoagv' },
+  { id: '5', 
+    image: require('../../assets/MarthaF.png'),
+    link: 'https://wa.me/5493875056536' },
 ];
 
 export default function SponsorCarousel() {
@@ -49,7 +52,7 @@ export default function SponsorCarousel() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prevIndex) => (prevIndex + 1) % SPONSORS.length);
-    }, 3000); // Cambia cada 3 segundos
+    }, 3000); 
 
     return () => clearInterval(interval);
   }, []);

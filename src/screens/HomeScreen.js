@@ -63,12 +63,14 @@ export default function HomeScreen({ navigation }) {
 
       </View>
     </ScrollView>
-    <SponsorCarousel />
+      <View style={globalStyles.footerCarousel}>
+        <SponsorCarousel />
+      </View>  
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   map: {height: 200, width: '100%', borderRadius: 10, marginVertical: 10},
-
+  
 });
