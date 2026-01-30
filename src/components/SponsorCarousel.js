@@ -1,98 +1,99 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, 
-        Image, 
-        FlatList, 
-        Dimensions, 
-        StyleSheet,
-        TouchableOpacity, 
-        Linking, 
-        Platform } from 'react-native';
-
-const { width } = Dimensions.get('window');
+import { 
+  View, 
+  Image, 
+  FlatList, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Linking, 
+  Platform, 
+  useWindowDimensions 
+} from 'react-native';
 
 const SPONSORS = [
-  { id: '1', 
-    image: require('../../assets/pureZone.png'),
-    link: 'https://instagram.com/pure.zonespa' },
-  { id: '2', 
-    image: require('../../assets/LabDelMilagro.png'),
-    link: 'https://wa.me/5493875145872'
-     },
-  { id: '3', 
-    image: require('../../assets/vetaSolutions.png'),
-    link: 'https://instagram.com/veta.solutions' },
-  { id: '4', 
-    image: require('../../assets/avg.png'),
-    link: 'https://instagram.com/grupoagv' },
-  { id: '5', 
-    image: require('../../assets/MarthaF.png'),
-    link: 'https://wa.me/5493875056536' },
+  { id: '1', image: require('../../assets/pureZone.png'), link: 'https://instagram.com/pure.zonespa' },
+  { id: '2', image: require('../../assets/LabDelMilagro.png'), link: 'https://wa.me/5493875145872' },
+  { id: '3', image: require('../../assets/vetaSolutions.png'), link: 'https://instagram.com/veta.solutions' },
+  { id: '4', image: require('../../assets/avg.png'), link: 'https://instagram.com/grupoagv' },
+  { id: '5', image: require('../../assets/MarthaF.png'), link: 'https://wa.me/5493875056536' },
+  { id: '6', image: require('../../assets/panificarte.png'), link: 'https://instagram.com/panificarte.salta' },
 ];
 
 export default function SponsorCarousel() {
+  const { width } = useWindowDimensions();
   const flatListRef = useRef(null);
   const [index, setIndex] = useState(0);
 
-  const getItemLayout = (data, index) => ({
-  length: width,
-  offset: width * index,
-  index,
-});
-
-  const handlePress = (url) => {
-  if (!url) return;
-
-  if (Platform.OS === 'web') {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  } else {
-    Linking.openURL(url).catch(err => console.error("Error", err));
-  }
-};
+  const handlePress = async (url) => {
+    if (!url) return;
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      Linking.openURL(url).catch(() => console.log("Error al abrir URL"));
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex((prevIndex) => (prevIndex + 1) % SPONSORS.length);
-    }, 3000); 
-
+      setIndex((prev) => (prev + 1) % SPONSORS.length);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    flatListRef.current?.scrollToIndex({ index, animated: true });
-  }, [index]);
+    if (width > 0 && flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index, animated: true });
+    }
+  }, [index, width]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { width: width }]}>
       <FlatList
         ref={flatListRef}
         data={SPONSORS}
         horizontal
         pagingEnabled
-        getItemLayout={getItemLayout}
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
+        getItemLayout={(_, idx) => ({ 
+          length: width, 
+          offset: width * idx, 
+          index: idx 
+        })}
         renderItem={({ item }) => (
-      <TouchableOpacity 
-        activeOpacity={0.8} 
-        onPress={() => handlePress(item.link)} 
-        style={styles.card}
-      >
-        <Image source={item.image} style={styles.logo} resizeMode="contain" />
-      </TouchableOpacity>
-    )}
+          <TouchableOpacity 
+           onPress={() => handlePress(item.link)} 
+            style={[styles.card, { width: width }]} 
+          >
+           <View style={styles.imageWrapper}>
+            <Image 
+              source={item.image} 
+              style={styles.logo} 
+              resizeMode="contain" 
+            />
+          </View>
+          </TouchableOpacity>
+        )}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { height: 100, 
-    backgroundColor: '#fff', 
-    borderTopWidth: 1, 
-    borderColor: '#eee', 
-    marginBottom: 50,
-    zIndex: 999, 
-    elevation: 5 },
-  card: { width: width, justifyContent: 'center', alignItems: 'center' },
-  logo: { width: width * 0.7, height: 80 },
+  container: { height: 100, backgroundColor: '#fff' },
+  card: { 
+    height: 100, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  imageWrapper: {
+    width: '85%', // Un poco de aire a los costados
+    height: 60,    // Un poco de aire arriba y abajo (carrusel tiene 100)
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logo: { 
+    width: '100%', 
+    height: '100%' 
+  },
 });
