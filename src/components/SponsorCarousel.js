@@ -17,6 +17,7 @@ const SPONSORS = [
   { id: '4', image: require('../../assets/avg.png'), link: 'https://instagram.com/grupoagv' },
   { id: '5', image: require('../../assets/MarthaF.png'), link: 'https://wa.me/5493875056536' },
   { id: '6', image: require('../../assets/panificarte.png'), link: 'https://instagram.com/panificarte.salta' },
+  { id: '7', image: require('../../assets/SistemasZamba.jpg'), link: 'https://wa.me/5493875057281' },
 ];
 
 export default function SponsorCarousel() {
