@@ -60,7 +60,7 @@ const ListaBuenaFe = ({ route, navigation }) => {
     const anio = parseInt(partes[2]);
 
     if (categoriaAuto === "Sub 14") {
-      if (anio < 2012 || anio > 2014) {
+      if (anio < 2012 || anio > 2015) {
         mostrarAlerta("Categoría Sub 14", "Deben ser nacidas entre 2012 y 2014.");
         return;
       }
