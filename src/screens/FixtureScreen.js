@@ -66,7 +66,7 @@ const FixtureScreen = () => {
   };
 
   const descargarPDF = () => {
-    const urlPdf = 'https://docs.google.com/spreadsheets/d/1DiWbJDY9VmkAxdWzPCCYlhXZiukOhCiW/edit?usp=sharing&ouid=116697238436160205991&rtpof=true&sd=true';
+    const urlPdf = 'hhttps://drive.google.com/file/d/1qEnsX7SKrXt7oljvLU5N4yu6_9HjhLb3/view?usp=sharing';
     Linking.openURL(urlPdf).catch(err => console.error("Error al abrir PDF", err));
   };
 
@@ -87,7 +87,7 @@ const FixtureScreen = () => {
  
           <View style={[globalStyles.scrollContent, { paddingBottom: 20 }]}>
             <TouchableOpacity style={styles.btnPdf} onPress={descargarPDF}>
-              <Text style={styles.btnPdfText}>📄 DESCARGAR FIXTURE COMPLETO (PDF)</Text>
+              <Text style={styles.btnPdfText}>📄 DESCARGAR REGLAMENTO (PDF)</Text>
             </TouchableOpacity>
 
             <View style={styles.selectorContainer}>
