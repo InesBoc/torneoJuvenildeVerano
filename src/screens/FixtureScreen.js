@@ -66,7 +66,7 @@ const FixtureScreen = () => {
   };
 
   const descargarPDF = () => {
-    const urlPdf = 'hhttps://drive.google.com/file/d/1qEnsX7SKrXt7oljvLU5N4yu6_9HjhLb3/view?usp=sharing';
+    const urlPdf = 'https://drive.google.com/file/d/1qEnsX7SKrXt7oljvLU5N4yu6_9HjhLb3/view?usp=sharing';
     Linking.openURL(urlPdf).catch(err => console.error("Error al abrir PDF", err));
   };
 
