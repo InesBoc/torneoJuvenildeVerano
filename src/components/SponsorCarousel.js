@@ -18,7 +18,7 @@ const SPONSORS = [
   { id: '5', image: require('../../assets/MarthaF.png'), link: 'https://wa.me/5493875056536' },
   { id: '6', image: require('../../assets/panificarte.png'), link: 'https://instagram.com/panificarte.salta' },
   { id: '7', image: require('../../assets/SistemasZamba.jpg'), link: 'https://wa.me/5493875057281' },
-  { id: '8', image: require('../../assets/soul.png'), link: 'https://wa.me/549387587223' },
+  { id: '8', image: require('../../assets/soul.png'), link: 'https://wa.me/5493875878223' },
 ];
 
 export default function SponsorCarousel() {
