@@ -77,10 +77,14 @@ export default function MisInscripcionesScreen({ navigation }) {
               <View style={styles.divider} />
               
               <Text style={styles.labelEquipos}>Equipos Inscriptos:</Text>
-              {item.equipos?.map((eq, idx) => (
-                <Text key={idx} style={styles.equipoNombre}>• {eq.nombre}</Text>
-              ))}
-
+                {item.equipos?.map((eq, idx) => (
+                  <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+                    <Text style={styles.equipoNombre}>• {eq.nombre}</Text>
+                    <View style={styles.badgeCategoria}>
+                      <Text style={styles.badgeCategoriaText}>{eq.categoria}</Text>
+                    </View>
+                  </View>
+                ))}
               <View style={styles.footerCard}>
                 <Text style={styles.estadoText}>Estado: {item.estado}</Text>
                 <View style={styles.badgeOk}>
@@ -119,5 +123,7 @@ const styles = StyleSheet.create({
   footerCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15 },
   estadoText: { fontSize: 14, color: '#27ae60', fontWeight: 'bold' },
   badgeOk: { backgroundColor: '#2e7d32', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12 },
-  badgeText: { color: '#FFF', fontSize: 10, fontWeight: 'bold' }
+  badgeText: { color: '#FFF', fontSize: 10, fontWeight: 'bold' },
+  badgeCategoria: {  backgroundColor: '#eee', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8},
+  badgeCategoriaText: { fontSize: 10, fontWeight: 'bold', color: '#666'},
 });

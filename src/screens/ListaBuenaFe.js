@@ -18,7 +18,13 @@ const ListaBuenaFe = ({ route, navigation }) => {
  
   const equipoExistente = datosInscripcion.equipos.find(e => e.id === equipoId);
   
-  const [nuevaJugadora, setNuevaJugadora] = useState({ apellido: '', nombre: '', dni: '', fechaNac: '' });
+  const [nuevaJugadora, setNuevaJugadora] = useState({ 
+    apellido: '', 
+    nombre: '', 
+    dni: '',
+    fechaNac: '',
+    dorsal: ''
+  });
   const [jugadoras, setJugadoras] = useState(equipoExistente?.jugadoras || []);
   const [staff, setStaff] = useState(equipoExistente?.staff || { dt: '', ac: '', pf: '', jefe: '' });
   
@@ -43,14 +49,18 @@ const ListaBuenaFe = ({ route, navigation }) => {
   };
 
   const agregarALista = () => {
-    const { nombre, apellido, dni, fechaNac } = nuevaJugadora;
+    const { nombre, apellido, dni, fechaNac,dorsal } = nuevaJugadora;
     const categoriaAuto = nombreEquipo.includes("14") ? "Sub 14" : "Sub 16";
 
-    if (!nombre || !apellido || !dni || fechaNac.length < 10) {
-      mostrarAlerta("Atención", "Completa todos los datos de la jugadora.");
+    if (!nombre || !apellido || !dni || !dorsal || fechaNac.length < 10) {
+      mostrarAlerta("Atención", "Completa todos los datos , incluyendo el número de camiseta.");
       return;
     }
 
+    if (jugadoras.find(j => j.dorsal === dorsal)) {
+        mostrarAlerta("Número duplicado", `La camiseta ${dorsal} ya fue asignada.`);
+        return;
+    }
     if (dni.length < 7 || dni.length > 8) {
       mostrarAlerta("Error", "El DNI debe tener 7 u 8 dígitos.");
       return;
@@ -77,7 +87,7 @@ const ListaBuenaFe = ({ route, navigation }) => {
     }
 
     setJugadoras([...jugadoras, { ...nuevaJugadora, id: Date.now().toString() }]);
-    setNuevaJugadora({ apellido: '', nombre: '', dni: '', fechaNac: '' });
+    setNuevaJugadora({ apellido: '', nombre: '', dni: '', fechaNac: '',dorsal: '' });
   };
 
   const finalizarCarga = () => {
@@ -108,6 +118,14 @@ const ListaBuenaFe = ({ route, navigation }) => {
 
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>1. Datos de la Jugadora</Text>
+          <TextInput 
+              style={[globalStyles.input, { width: 110 }]} 
+              placeholder="Camiseta N°" 
+              keyboardType="numeric"
+              maxLength={3}
+              value={nuevaJugadora.dorsal} 
+              onChangeText={(v) => setNuevaJugadora({...nuevaJugadora, dorsal: v.replace(/\D/g, "")})}
+            />
           <TextInput 
             style={globalStyles.input} 
             placeholder="Apellido" 
@@ -148,6 +166,9 @@ const ListaBuenaFe = ({ route, navigation }) => {
           {jugadoras.map((item, index) => (
             <View key={item.id} style={styles.itemJugadora}>
               <Text style={styles.indexNumber}>{index + 1}.</Text>
+              <View style={styles.dorsalBadge}>
+                <Text style={styles.dorsalText}>{item.dorsal}</Text>
+              </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.itemTextBold}>{item.apellido.toUpperCase()}, {item.nombre}</Text>
                 <Text style={styles.itemSubtext}>DNI: {item.dni} | {item.fechaNac}</Text>
@@ -192,7 +213,21 @@ const styles = StyleSheet.create({
   itemSubtext: { fontSize: 12, color: '#666' },
   btnQuitar: { color: 'red', fontSize: 12 },
   staffCard: { marginTop: 20, padding: 15, backgroundColor: '#F9F9F9', borderRadius: 10 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 }
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  dorsalBadge: { 
+    backgroundColor: '#D32F2F',
+    width: 35,
+    height: 35,
+    borderRadius: 17.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  dorsalText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14
+  },
 });
 
 export default ListaBuenaFe;

@@ -61,6 +61,7 @@ const ResumenInscripcion = ({ navigation }) => {
             .team-card { margin-top: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 10px; page-break-inside: avoid; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th { background-color: #f2f2f2; text-align: left; padding: 10px; border-bottom: 2px solid #D32F2F; }
+            th.num-col { width: 40px; }
             td { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
             .staff-section { margin-top: 15px; background-color: #f9f9f9; padding: 10px; border-radius: 5px; }
             .staff-title { font-weight: bold; font-size: 14px; color: #D32F2F; margin-bottom: 5px; border-bottom: 1px solid #ccc; }
@@ -81,6 +82,7 @@ const ResumenInscripcion = ({ navigation }) => {
               <table>
                 <thead>
                   <tr>
+                    <th class="num-col">N°</th>
                     <th>Jugadora</th>
                     <th>DNI</th>
                     <th>F. Nac.</th>
@@ -89,6 +91,7 @@ const ResumenInscripcion = ({ navigation }) => {
                 <tbody>
                   ${eq.jugadoras.map(j => `
                     <tr>
+                      <td style="font-weight: bold; color: #D32F2F;">${j.dorsal || '-'}</td>
                       <td>${j.apellido.toUpperCase()}, ${j.nombre}</td>
                       <td>${j.dni}</td>
                       <td>${j.fechaNac}</td>

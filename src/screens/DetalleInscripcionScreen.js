@@ -27,12 +27,25 @@ export default function DetalleInscripcionScreen({ route, navigation }) {
             <Text style={styles.sectionLabel}>Jugadoras ({equipo.jugadoras.length})</Text>
             {equipo.jugadoras.map((j, idx) => (
               <View key={idx} style={styles.jugadoraRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{
+                    backgroundColor: '#D32F2F', 
+                    width: 22, 
+                    height: 22, 
+                    borderRadius: 11, 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    marginRight: 8
+                  }}>
+                    <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{j.dorsal}</Text>
+                  </View>
                 <Text style={styles.jugadoraInfo}>
-                  {idx + 1}. {j.apellido.toUpperCase()}, {j.nombre}
+                {j.apellido.toUpperCase()}, {j.nombre}
                 </Text>
+              </View>
                 <Text style={styles.dniText}>DNI: {j.dni}</Text>
               </View>
-            ))}
+              ))}
 
             <Text style={[styles.sectionLabel, { marginTop: 15 }]}>Cuerpo Técnico</Text>
             <View style={styles.staffBox}>

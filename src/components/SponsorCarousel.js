@@ -19,6 +19,8 @@ const SPONSORS = [
   { id: '6', image: require('../../assets/panificarte.png'), link: 'https://instagram.com/panificarte.salta' },
   { id: '7', image: require('../../assets/SistemasZamba.jpg'), link: 'https://wa.me/5493875057281' },
   { id: '8', image: require('../../assets/soul.png'), link: 'https://wa.me/5493875878223' },
+  { id: '9', image: require('../../assets/RQservicios.png'), link: 'https://rqsoluciones.com.ar' },
+  { id: '10', image: require('../../assets/laciosForEver.png'), link: 'https://instagram.com/laciosforever.salta' },
 ];
 
 export default function SponsorCarousel() {
