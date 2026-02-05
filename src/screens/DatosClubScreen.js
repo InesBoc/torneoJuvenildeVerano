@@ -14,13 +14,13 @@ import { globalStyles } from '../styles/globalStyles';
 const DatosClubScreen = ({ navigation }) => {
   const { datosInscripcion, actualizarClub, limpiarRegistro } = useInscripcion();
 
-  // Estados locales
+  // Estados locales inicializados con el contexto
   const [nombre, setNombre] = useState(datosInscripcion.club.nombre || '');
   const [ciudad, setCiudad] = useState(datosInscripcion.club.ciudad || '');
   const [cantSub14, setCantSub14] = useState(datosInscripcion.club.cantSub14 || 0);
   const [cantSub16, setCantSub16] = useState(datosInscripcion.club.cantSub16 || 0);
 
-
+  // 1. Efecto para manejar la alerta de borrador al entrar
   useEffect(() => {
     if (datosInscripcion.club.nombre !== '') {
       Alert.alert(
@@ -30,7 +30,8 @@ const DatosClubScreen = ({ navigation }) => {
           { 
             text: "Empezar de cero", 
             onPress: async () => {
-              await limpiarRegistro();
+              await limpiarRegistro(); // Forzamos la limpieza en el Context y AsyncStorage
+              // RESETEAMOS LOCALMENTE PARA ANDROID:
               setNombre('');
               setCiudad('');
               setCantSub14(0);
@@ -38,32 +39,27 @@ const DatosClubScreen = ({ navigation }) => {
             }, 
             style: "destructive" 
           },
-          { 
-            text: "Continuar", 
-            onPress: () => {
-            
-              navigation.navigate('ListaEquipos');
-            } 
-          }
+          { text: "Continuar", onPress: () => navigation.navigate('ListaEquipos') }
         ]
       );
     }
   }, []);
 
-
+  // 2. ESTE EFECTO ES CLAVE PARA ANDROID: 
+  // Si el usuario pulsa "limpiar" en el contexto, esta pantalla debe reaccionar
   useEffect(() => {
     setNombre(datosInscripcion.club.nombre || '');
     setCiudad(datosInscripcion.club.ciudad || '');
     setCantSub14(datosInscripcion.club.cantSub14 || 0);
     setCantSub16(datosInscripcion.club.cantSub16 || 0);
-  }, [datosInscripcion.club]);
+  }, [datosInscripcion.club]); // Escucha cambios profundos en el objeto club
 
   const continuar = () => {
     const s14 = parseInt(cantSub14) || 0;
     const s16 = parseInt(cantSub16) || 0;
 
     if (!nombre.trim() || !ciudad.trim() || (s14 === 0 && s16 === 0)) {
-      Alert.alert("Error", "Por favor completa el nombre, ciudad y selecciona al menos un equipo.");
+      Alert.alert("Error", "Completa nombre, ciudad y al menos un equipo.");
       return;
     }
 
@@ -107,7 +103,7 @@ const DatosClubScreen = ({ navigation }) => {
               style={styles.inputSmall} 
               keyboardType="numeric" 
               placeholder="0"
-              value={cantSub14.toString()} // Sincronización visual
+              value={cantSub14.toString()} // Para que Android no lo deje vacío
               onChangeText={(val) => setCantSub14(val.replace(/[^0-9]/g, ''))}
             />
           </View>
@@ -118,7 +114,7 @@ const DatosClubScreen = ({ navigation }) => {
               style={styles.inputSmall} 
               keyboardType="numeric" 
               placeholder="0"
-              value={cantSub16.toString()} // Sincronización visual
+              value={cantSub16.toString()} // Para que Android no lo deje vacío
               onChangeText={(val) => setCantSub16(val.replace(/[^0-9]/g, ''))}
             />
           </View>
