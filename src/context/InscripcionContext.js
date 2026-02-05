@@ -24,7 +24,11 @@ export const InscripcionProvider = ({ children }) => {
       try {
         const guardado = await AsyncStorage.getItem('@registro_tjv');
         if (guardado) {
-          setDatosInscripcion(JSON.parse(guardado));
+          const datosParseados = JSON.parse(guardado);
+          // Solo cargamos si realmente hay un nombre de club (evita cargar basura)
+          if (datosParseados.club && datosParseados.club.nombre !== '') {
+            setDatosInscripcion(datosParseados);
+          }
         }
       } catch (e) {
         console.error("Error recuperando persistencia", e);
@@ -36,14 +40,16 @@ export const InscripcionProvider = ({ children }) => {
   useEffect(() => {
     const guardarEnTelefono = async () => {
       try {
-        await AsyncStorage.setItem('@registro_tjv', JSON.stringify(datosInscripcion));
+        // Solo guardamos si hay algo real que guardar
+        if (datosInscripcion.club.nombre !== '') {
+          await AsyncStorage.setItem('@registro_tjv', JSON.stringify(datosInscripcion));
+        }
       } catch (e) {
         console.error("Error guardando datos", e);
       }
     };
-    if (datosInscripcion !== inscripcionInicial) {
-        guardarEnTelefono();
-    }
+    
+    guardarEnTelefono();
   }, [datosInscripcion]);
 
   const actualizarClub = (info) => {
@@ -52,7 +58,6 @@ export const InscripcionProvider = ({ children }) => {
       club: { ...prev.club, ...info } 
     }));
   };
-
   const guardarEquipo = (equipoEditado) => {
     setDatosInscripcion(prev => {
       const existeIdx = prev.equipos.findIndex(e => e.id === equipoEditado.id);
