@@ -14,13 +14,13 @@ import { globalStyles } from '../styles/globalStyles';
 const DatosClubScreen = ({ navigation }) => {
   const { datosInscripcion, actualizarClub, limpiarRegistro } = useInscripcion();
 
-  // Estados locales inicializados con el contexto
+  // Estados locales sincronizados con el contexto al inicio
   const [nombre, setNombre] = useState(datosInscripcion.club.nombre || '');
   const [ciudad, setCiudad] = useState(datosInscripcion.club.ciudad || '');
   const [cantSub14, setCantSub14] = useState(datosInscripcion.club.cantSub14 || 0);
   const [cantSub16, setCantSub16] = useState(datosInscripcion.club.cantSub16 || 0);
 
-  // 1. Efecto para manejar la alerta de borrador al entrar
+  // 1. Efecto para detectar borrador al cargar
   useEffect(() => {
     if (datosInscripcion.club.nombre !== '') {
       Alert.alert(
@@ -30,39 +30,49 @@ const DatosClubScreen = ({ navigation }) => {
           { 
             text: "Empezar de cero", 
             onPress: async () => {
-              await limpiarRegistro(); // Forzamos la limpieza en el Context y AsyncStorage
-              // RESETEAMOS LOCALMENTE PARA ANDROID:
+              // Limpiamos el almacenamiento físico y el contexto
+              await limpiarRegistro();
+              
+              // RESET MANUAL DE ESTADOS LOCALES (Vital para Android)
               setNombre('');
               setCiudad('');
               setCantSub14(0);
               setCantSub16(0);
+              
+              Alert.alert("Éxito", "Los datos se han borrado correctamente.");
             }, 
             style: "destructive" 
           },
-          { text: "Continuar", onPress: () => navigation.navigate('ListaEquipos') }
-        ]
+          { 
+            text: "Continuar", 
+            onPress: () => navigation.navigate('ListaEquipos') 
+          }
+        ],
+        { cancelable: false }
       );
     }
   }, []);
 
-  // 2. ESTE EFECTO ES CLAVE PARA ANDROID: 
-  // Si el usuario pulsa "limpiar" en el contexto, esta pantalla debe reaccionar
+  // 2. Efecto de sincronización (Vigilante)
+  // Si el contexto cambia externamente, actualiza los inputs
   useEffect(() => {
     setNombre(datosInscripcion.club.nombre || '');
     setCiudad(datosInscripcion.club.ciudad || '');
     setCantSub14(datosInscripcion.club.cantSub14 || 0);
     setCantSub16(datosInscripcion.club.cantSub16 || 0);
-  }, [datosInscripcion.club]); // Escucha cambios profundos en el objeto club
+  }, [datosInscripcion.club]);
 
   const continuar = () => {
+    // Convertimos a número antes de validar
     const s14 = parseInt(cantSub14) || 0;
     const s16 = parseInt(cantSub16) || 0;
 
     if (!nombre.trim() || !ciudad.trim() || (s14 === 0 && s16 === 0)) {
-      Alert.alert("Error", "Completa nombre, ciudad y al menos un equipo.");
+      Alert.alert("Error", "Por favor completa el nombre, ciudad y selecciona al menos un equipo.");
       return;
     }
 
+    // Guardamos en el contexto
     actualizarClub({ 
       nombre: nombre.trim(), 
       ciudad: ciudad.trim(), 
@@ -107,8 +117,11 @@ const DatosClubScreen = ({ navigation }) => {
               style={styles.inputSmall} 
               keyboardType="numeric" 
               placeholder="0"
-              value={cantSub14.toString()} // Para que Android no lo deje vacío
-              onChangeText={(val) => setCantSub14(val.replace(/[^0-9]/g, ''))}
+              value={cantSub14.toString()} 
+              onChangeText={(val) => {
+                const numeric = val.replace(/[^0-9]/g, '');
+                setCantSub14(numeric === '' ? 0 : numeric);
+              }}
             />
           </View>
 
@@ -118,8 +131,11 @@ const DatosClubScreen = ({ navigation }) => {
               style={styles.inputSmall} 
               keyboardType="numeric" 
               placeholder="0"
-              value={cantSub16.toString()} // Para que Android no lo deje vacío
-              onChangeText={(val) => setCantSub16(val.replace(/[^0-9]/g, ''))}
+              value={cantSub16.toString()}
+              onChangeText={(val) => {
+                const numeric = val.replace(/[^0-9]/g, '');
+                setCantSub16(numeric === '' ? 0 : numeric);
+              }}
             />
           </View>
 
