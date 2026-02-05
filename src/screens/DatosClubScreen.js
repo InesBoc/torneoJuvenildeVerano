@@ -85,6 +85,8 @@ const DatosClubScreen = ({ navigation }) => {
             placeholder="Ej: Tigres Rugby Club" 
             value={nombre}
             onChangeText={setNombre}
+            autoComplete="off"
+            importantForAutofill="no"
           />
 
           <Text style={styles.label}>Ciudad</Text>
@@ -93,6 +95,8 @@ const DatosClubScreen = ({ navigation }) => {
             placeholder="Ej: Salta" 
             value={ciudad}
             onChangeText={setCiudad}
+            autoComplete="off"
+            importantForAutofill="no"
           />
 
           <Text style={styles.sectionTitle}>Cantidad de Equipos</Text>
