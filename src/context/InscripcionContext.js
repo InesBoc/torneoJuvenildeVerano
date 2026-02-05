@@ -70,15 +70,15 @@ export const InscripcionProvider = ({ children }) => {
   };
 
   const limpiarRegistro = async () => {
+  try {
 
-    try {
-      await AsyncStorage.removeItem('@registro_tjv');
-    } catch (e) {
-      console.error("Error al limpiar persistencia", e);
-    }
+    await AsyncStorage.removeItem('@registro_tjv');
     setDatosInscripcion(inscripcionInicial);
-  };
-
+    console.log("Persistencia borrada con éxito en Android");
+  } catch (e) {
+    console.error("Error al limpiar persistencia", e);
+  }
+};
   return (
     <InscripcionContext.Provider value={{ datosInscripcion, actualizarClub, guardarEquipo, limpiarRegistro }}>
       {children}

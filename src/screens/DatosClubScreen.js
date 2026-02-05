@@ -20,7 +20,7 @@ const DatosClubScreen = ({ navigation }) => {
   const [cantSub14, setCantSub14] = useState(datosInscripcion.club.cantSub14 || 0);
   const [cantSub16, setCantSub16] = useState(datosInscripcion.club.cantSub16 || 0);
 
-  // 1. Efecto para detectar borrador al cargar la pantalla
+
   useEffect(() => {
     if (datosInscripcion.club.nombre !== '') {
       Alert.alert(
@@ -29,8 +29,8 @@ const DatosClubScreen = ({ navigation }) => {
         [
           { 
             text: "Empezar de cero", 
-            onPress: () => {
-              limpiarRegistro();
+            onPress: async () => {
+              await limpiarRegistro();
               setNombre('');
               setCiudad('');
               setCantSub14(0);
@@ -41,8 +41,7 @@ const DatosClubScreen = ({ navigation }) => {
           { 
             text: "Continuar", 
             onPress: () => {
-              // Si elige continuar, los estados ya se inicializaron con datosInscripcion
-              // pero forzamos el navigate si ya estaba en proceso
+            
               navigation.navigate('ListaEquipos');
             } 
           }
@@ -51,7 +50,7 @@ const DatosClubScreen = ({ navigation }) => {
     }
   }, []);
 
-  // 2. Efecto de sincronización: Si el contexto cambia (limpieza), actualiza los inputs
+
   useEffect(() => {
     setNombre(datosInscripcion.club.nombre || '');
     setCiudad(datosInscripcion.club.ciudad || '');
