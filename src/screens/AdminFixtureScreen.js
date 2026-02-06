@@ -203,6 +203,7 @@ const generarPlanillaPartido = async (partido) => {
             </div>
             <div class="header-text">
               <h2>TIGRES RUGBY CLUB</h2>
+              <h3>1° Torneo Juvenil de Verano</h3>
               <div style="font-size: 13px; margin-top: 3px;">PLANILLA DE PARTIDO OFICIAL - <strong>${partido.categoria.toUpperCase()}</strong></div>
             </div>
           </div>
