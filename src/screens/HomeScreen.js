@@ -154,12 +154,13 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    height: 100,
+    height: 120,
     width: '100%',
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderColor: '#eee',
     justifyContent: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 25 : 10,
   },
 
   map: { height: 200, width: '100%', borderRadius: 10, marginVertical: 10 },
