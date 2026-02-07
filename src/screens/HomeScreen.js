@@ -16,11 +16,12 @@ export default function HomeScreen({ navigation }) {
   const scrollHeight = height - 100;
 
   return (
-  <View style={{ flex: 1, backgroundColor: '#fff' }}>
-    <View style={{ flex: 1 }}> 
+  <View style={{ height: height, width: width, backgroundColor: '#fff' }}>
+    {/* Área de Scroll fija */}
+    <View style={{ height: scrollHeight }}>
       <ScrollView 
+        contentContainerStyle={[globalStyles.scrollContent, { paddingBottom: 20 }]}
         showsVerticalScrollIndicator={true}
-        contentContainerStyle={{ paddingBottom: 20 }} 
       >
         <View style={globalStyles.scrollContent}>
           <View style={{ alignItems: 'center', marginBottom: 20 }}>

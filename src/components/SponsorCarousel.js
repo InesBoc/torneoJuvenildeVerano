@@ -12,18 +12,18 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 
 const SPONSORS = [
-  { id: '1', image: require('../../assets/pureZone.png'), link: 'https://instagram.com/pure.zonespa' },
+  { id: '1', image: require('../../assets/pureZone.png'), link: 'https://instagram.com//_u/pure.zonespa/' },
   { id: '2', image: require('../../assets/LabDelMilagro.png'), link: 'https://wa.me/5493875145872' },
-  { id: '3', image: require('../../assets/vetaSolutions.png'), link: 'https://instagram.com/veta.solutions' },
+  { id: '3', image: require('../../assets/vetaSolutions.png'), link: 'https://www.instagram.com/_u/veta.solutions/' },
   { id: '4', image: require('../../assets/avg.png'), link: 'https://instagram.com/grupoagv' },
   { id: '5', image: require('../../assets/MarthaF.png'), link: 'https://wa.me/5493875056536' },
-  { id: '6', image: require('../../assets/panificarte.png'), link: 'https://instagram.com/panificarte.salta' },
+  { id: '6', image: require('../../assets/panificarte.png'), link: 'https://instagram.com//_u/panificarte.salta/' },
   { id: '7', image: require('../../assets/SistemasZamba.jpg'), link: 'https://wa.me/5493875057281' },
   { id: '8', image: require('../../assets/soul.png'), link: 'https://wa.me/5493875878223' },
   { id: '9', image: require('../../assets/RQservicios.png'), link: 'https://rqsoluciones.com.ar' },
-  { id: '10', image: require('../../assets/laciosForEver.png'), link: 'https://instagram.com/laciosforever.salta' },
+  { id: '10', image: require('../../assets/laciosForEver.png'), link: 'https://instagram.com//_u/laciosforever.salta/' },
   { id: '11', image: require('../../assets/luchoAgencia.png'), link: 'https://wa.me/5493876841573' },
-  { id: '12', image: require('../../assets/inmobiliariaA3.png'), link: 'https://instagram.com/aguero.propiedades' },
+  { id: '12', image: require('../../assets/inmobiliariaA3.png'), link: 'https://instagram.com//_u/aguero.propiedades/' },
 ];
 
 export default function SponsorCarousel() {
