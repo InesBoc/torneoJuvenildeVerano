@@ -9,6 +9,7 @@ import {
   Platform, 
   useWindowDimensions 
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 
 const SPONSORS = [
   { id: '1', image: require('../../assets/pureZone.png'), link: 'https://instagram.com/pure.zonespa' },
@@ -21,6 +22,8 @@ const SPONSORS = [
   { id: '8', image: require('../../assets/soul.png'), link: 'https://wa.me/5493875878223' },
   { id: '9', image: require('../../assets/RQservicios.png'), link: 'https://rqsoluciones.com.ar' },
   { id: '10', image: require('../../assets/laciosForEver.png'), link: 'https://instagram.com/laciosforever.salta' },
+  { id: '11', image: require('../../assets/luchoAgencia.png'), link: 'https://wa.me/5493876841573' },
+  { id: '12', image: require('../../assets/inmobiliariaA3.png'), link: 'https://instagram.com/aguero.propiedades' },
 ];
 
 export default function SponsorCarousel() {
@@ -28,15 +31,37 @@ export default function SponsorCarousel() {
   const flatListRef = useRef(null);
   const [index, setIndex] = useState(0);
 
-  const handlePress = async (url) => {
-    if (!url) return;
-    if (Platform.OS === 'web') {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
-      Linking.openURL(url).catch(() => console.log("Error al abrir URL"));
-    }
-  };
+const handlePress = async (url) => {
+  if (!url) return;
 
+  try {
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+      return;
+    }
+
+    if (url.includes('instagram.com')) {
+      // Extraemos el usuario (ej: de '.../veta.solutions' a 'veta.solutions')
+      const username = url.split('instagram.com/')[1].split('/')[0].replace('/', '');
+      
+      // Intentamos este formato de URL que suele saltarse el bug del perfil propio
+      const bypassUrl = `https://www.instagram.com/${username}/?utm_source=qr`; 
+
+      await WebBrowser.openBrowserAsync(bypassUrl, {
+        showTitle: true,
+        toolbarColor: '#ffffff',
+        controlsColor: '#000000',
+        // Esto fuerza a que NO intente abrir la app nativa si es posible
+        enableDefaultShare: false,
+        showInRecents: true,
+      });
+    } else {
+      await WebBrowser.openBrowserAsync(url);
+    }
+  } catch (error) {
+    console.log("Error:", error);
+  }
+};
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % SPONSORS.length);

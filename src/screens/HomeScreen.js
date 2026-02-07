@@ -16,12 +16,12 @@ export default function HomeScreen({ navigation }) {
   const scrollHeight = height - 100;
 
   return (
-   <View style={{ height: height, width: width, backgroundColor: '#fff' }}>
-      <View style={{ height: scrollHeight }}>
-        <ScrollView 
-          contentContainerStyle={[globalStyles.scrollContent, { paddingBottom: 20 }]}
-          showsVerticalScrollIndicator={true}
-        >
+ <View style={{ flex: 1, backgroundColor: '#fff' }}>
+   <View style={{ flex: 1 }}>
+    <ScrollView 
+        contentContainerStyle={[globalStyles.scrollContent, { paddingBottom: 20 }]}
+        showsVerticalScrollIndicator={true}
+      >
         <View style={globalStyles.scrollContent}>
         <View style={{ alignItems: 'center', marginBottom: 20 }}>
           <Text style={globalStyles.title}>Torneo Juvenil de Verano 2026</Text>
@@ -70,11 +70,11 @@ export default function HomeScreen({ navigation }) {
         </View>
         </View>
       </ScrollView>
-
-      <View style={styles.footer}>
+    </View>
+     <View style={styles.footer}>
         <SponsorCarousel />
       </View>   
-    </View>
+    
     </View>
   );
 }
@@ -87,13 +87,14 @@ const styles = StyleSheet.create({
   scrollArea: {
     flex: 1,
   },
-  footer: {
-    height: 100,
-    width: '100%',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderColor: '#eee',
-    justifyContent: 'center',
-  },
+footer: {
+  height: 120, 
+  width: '100%',
+  backgroundColor: '#fff',
+  borderTopWidth: 1,
+  borderColor: '#eee',
+  justifyContent: 'center',
+  paddingBottom: 20, 
+},
   map: { height: 200, width: '100%', borderRadius: 10, marginVertical: 10 },
 });

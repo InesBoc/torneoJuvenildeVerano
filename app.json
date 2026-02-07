@@ -13,18 +13,43 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tjc.torneo",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "instagram",
+          "whatsapp"
+        ]
+      }
     },
     "android": {
+      "package": "com.tjc.torneo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "instagram"
+          }
+        },
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "whatsapp"
+          }
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/icon.png",
       "themeColor": "#000000"
-    }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }
