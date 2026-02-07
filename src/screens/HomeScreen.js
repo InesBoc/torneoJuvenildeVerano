@@ -17,11 +17,10 @@ export default function HomeScreen({ navigation }) {
 
   return (
   <View style={{ flex: 1, backgroundColor: '#fff' }}>
-
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}> 
       <ScrollView 
-        contentContainerStyle={{ paddingBottom: 20 }}
         showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ paddingBottom: 20 }} 
       >
         <View style={globalStyles.scrollContent}>
           <View style={{ alignItems: 'center', marginBottom: 20 }}>
@@ -89,13 +88,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 footer: {
-  height: 100,
-  width: '100%',
-  backgroundColor: '#fff',
-  borderTopWidth: 1,
-  borderColor: '#eee',
-  justifyContent: 'center',
-  paddingBottom: Platform.OS === 'ios' ? 25 : 10, 
-},
+    height: 100, // Alto fijo para el carrusel
+    width: '100%',
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#eee',
+    justifyContent: 'center',
+    // Esto asegura que en dispositivos con "notch" abajo no se tape
+    paddingBottom: Platform.OS === 'ios' ? 20 : 0, 
+  },
   map: { height: 200, width: '100%', borderRadius: 10, marginVertical: 10 },
 });
