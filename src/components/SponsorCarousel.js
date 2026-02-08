@@ -33,31 +33,38 @@ export default function SponsorCarousel() {
   const [index, setIndex] = useState(0);
 
 const handlePress = async (url) => {
-  if (!url) return;
-
-  const cleanUrl = url
-    .replace('http://', 'https://')
-    .replace('https://instagram.com', 'https://www.instagram.com');
-
-  if (Platform.OS === 'web') {
-    // fuerza navegador, evita Instagram Lite
-    window.open(
-      cleanUrl.endsWith('/') ? cleanUrl : `${cleanUrl}/`,
-      '_blank',
-      'noopener,noreferrer'
-    );
-    return;
-  }
-
-  // mobile (Expo / APK)
   try {
-    await Linking.openURL(
-      cleanUrl.endsWith('/') ? cleanUrl : `${cleanUrl}/`
-    );
+    if (!url) return;
+
+    // INSTAGRAM
+    if (url.includes('instagram.com')) {
+      const username = url.split('instagram.com/')[1]?.replace('/', '');
+
+      if (Platform.OS === 'android' && username) {
+        // fuerza navegador, evita Instagram Lite
+        const intentUrl = `intent://instagram.com/${username}#Intent;scheme=https;package=com.android.chrome;end`;
+        await Linking.openURL(intentUrl);
+        return;
+      }
+
+      // iOS / web
+      const webUrl = `https://www.instagram.com/${username}/`;
+      await Linking.openURL(webUrl);
+      return;
+    }
+
+    // WhatsApp o web normal
+    await Linking.openURL(url);
+
   } catch (e) {
-    Alert.alert('Error', 'No se pudo abrir el enlace');
+    console.log('Error link sponsor:', e);
+    Alert.alert(
+      'No se pudo abrir el enlace',
+      'Probá desde el navegador'
+    );
   }
 };
+
 
 
 
