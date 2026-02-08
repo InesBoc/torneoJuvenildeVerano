@@ -32,6 +32,26 @@ export default function SponsorCarousel() {
   const flatListRef = useRef(null);
   const [index, setIndex] = useState(0);
 
+const openInstagramWeb = async (username) => {
+  const webUrl = `https://www.instagram.com/${username}/`;
+
+  if (Platform.OS === 'android') {
+    const chromeIntent =
+      `intent://${webUrl.replace('https://', '')}` +
+      `#Intent;scheme=https;package=com.android.chrome;end`;
+
+    try {
+      await Linking.openURL(chromeIntent);
+      return;
+    } catch (e) {
+      await Linking.openURL(webUrl);
+    }
+  } else {
+    await Linking.openURL(webUrl);
+  }
+};
+
+
 const handlePress = async (url) => {
   try {
     if (!url) return;
@@ -45,10 +65,10 @@ const handlePress = async (url) => {
       if (Platform.OS === 'android') {
         // FORZAMOS CHROME
         const intent = `intent://${cleanUrl.replace('https://', '')}
-#Intent;
-scheme=https;
-package=com.android.chrome;
-end`;
+        #Intent;
+        scheme=https;
+        package=com.android.chrome;
+        end`;
         await Linking.openURL(intent);
       } else {
         // iOS y web
@@ -104,7 +124,8 @@ end`;
         })}
         renderItem={({ item }) => (
           <TouchableOpacity 
-           onPress={() => handlePress(item.link)} 
+           onPress={() => openInstagramWeb(item.link)}
+
             style={[styles.card, { width: width }]} 
           >
            <View style={styles.imageWrapper}>
