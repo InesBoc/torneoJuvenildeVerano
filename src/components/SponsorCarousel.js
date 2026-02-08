@@ -33,25 +33,32 @@ export default function SponsorCarousel() {
   const [index, setIndex] = useState(0);
 
 const handlePress = async (url) => {
+  if (!url) return;
+
+  const cleanUrl = url
+    .replace('http://', 'https://')
+    .replace('https://instagram.com', 'https://www.instagram.com');
+
+  if (Platform.OS === 'web') {
+    // fuerza navegador, evita Instagram Lite
+    window.open(
+      cleanUrl.endsWith('/') ? cleanUrl : `${cleanUrl}/`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+    return;
+  }
+
+  // mobile (Expo / APK)
   try {
-    if (!url) return;
-
-    // normalizamos instagram
-    if (url.includes('instagram.com')) {
-      const cleanUrl = url
-        .replace('http://', 'https://')
-        .replace('https://instagram.com', 'https://www.instagram.com');
-
-      await Linking.openURL(cleanUrl.endsWith('/') ? cleanUrl : `${cleanUrl}/`);
-      return;
-    }
-
-    await Linking.openURL(url);
-
+    await Linking.openURL(
+      cleanUrl.endsWith('/') ? cleanUrl : `${cleanUrl}/`
+    );
   } catch (e) {
-    console.log('Error link sponsor:', e);
+    Alert.alert('Error', 'No se pudo abrir el enlace');
   }
 };
+
 
 
   useEffect(() => {
