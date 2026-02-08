@@ -7,11 +7,13 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tjc.torneo",
@@ -22,34 +24,19 @@
         ]
       }
     },
+
     "android": {
       "package": "com.tjc.torneo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "data": {
-            "scheme": "instagram"
-          }
-        },
-        {
-          "action": "VIEW",
-          "data": {
-            "scheme": "whatsapp"
-          }
-        }
-      ]
+      "edgeToEdgeEnabled": true
     },
+
     "web": {
       "favicon": "./assets/icon.png",
       "themeColor": "#000000"
-    },
-    "plugins": [
-      "expo-web-browser"
-    ]
+    }
   }
 }

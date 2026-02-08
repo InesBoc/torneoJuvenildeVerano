@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const navigation = useNavigation();
   const [inscripciones, setInscripciones] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [tempNombres, setTempNombres] = useState({}); // Para manejar los inputs individuales
+  const [tempNombres, setTempNombres] = useState({}); 
 
   useEffect(() => {
     const q = query(collection(db, "inscripciones"), orderBy("fechaInscripcion", "desc"));
@@ -39,7 +39,6 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, []);
 
-  // NUEVA FUNCIÓN: Vincula un equipo específico dentro del array
   const vincularEquipoIndiv = async (inscripcion, equipoIndex, nuevoNombre) => {
     if (!nuevoNombre) {
       Alert.alert("Atención", "Escribe el nombre como figura en el fixture");
@@ -48,7 +47,6 @@ export default function AdminDashboard() {
 
     try {
       const nuevosEquipos = [...inscripcion.equipos];
-      // Actualizamos el campo nombreFixture SOLO para este equipo del array
       nuevosEquipos[equipoIndex] = {
         ...nuevosEquipos[equipoIndex],
         nombreFixture: nuevoNombre.trim()

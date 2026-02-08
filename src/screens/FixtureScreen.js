@@ -71,10 +71,19 @@ const FixtureScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, height: height, backgroundColor: '#fff' }}>
+   <View style={{ flex: 1, height: height, backgroundColor: '#fff' }}>
+       <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 100,
+      }}>
 
-      <View style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={true}>
+        <ScrollView
+          showsVerticalScrollIndicator={true}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
         <View style={globalStyles.scrollContent}>
             <TouchableOpacity style={styles.btnPdf} onPress={descargarPDF}>
               <Text style={styles.btnPdfText}>📄 DESCARGAR REGLAMENTO (PDF)</Text>
@@ -164,12 +173,12 @@ const FixtureScreen = () => {
             )}
           </View>
         </ScrollView>
-      </View>
+      
 
      <View style={styles.footerContainer}>
         <SponsorCarousel />
       </View>
-      
+      </View>
     </View>
   );
 };
@@ -177,13 +186,13 @@ const FixtureScreen = () => {
 
 const styles = StyleSheet.create({
  footerContainer: {
-  height: 120, 
+  height: 100, 
   width: '100%',
   backgroundColor: '#fff',
   borderTopWidth: 1,
   borderColor: '#eee',
   justifyContent: 'center',
-  paddingBottom: 20, 
+  paddingBottom: 10, 
   },
   btnPdf: { backgroundColor: '#D32F2F', padding: 15, marginBottom: 15, borderRadius: 8, alignItems: 'center' },
   btnPdfText: { color: 'white', fontWeight: 'bold' },

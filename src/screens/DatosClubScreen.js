@@ -14,13 +14,11 @@ import { globalStyles } from '../styles/globalStyles';
 const DatosClubScreen = ({ navigation }) => {
   const { datosInscripcion, actualizarClub, limpiarRegistro } = useInscripcion();
 
-  // Estados locales sincronizados con el contexto al inicio
   const [nombre, setNombre] = useState(datosInscripcion.club.nombre || '');
   const [ciudad, setCiudad] = useState(datosInscripcion.club.ciudad || '');
   const [cantSub14, setCantSub14] = useState(datosInscripcion.club.cantSub14 || 0);
   const [cantSub16, setCantSub16] = useState(datosInscripcion.club.cantSub16 || 0);
 
-  // 1. Efecto para detectar borrador al cargar
   useEffect(() => {
     if (datosInscripcion.club.nombre !== '') {
       Alert.alert(
@@ -30,10 +28,8 @@ const DatosClubScreen = ({ navigation }) => {
           { 
             text: "Empezar de cero", 
             onPress: async () => {
-              // Limpiamos el almacenamiento físico y el contexto
               await limpiarRegistro();
               
-              // RESET MANUAL DE ESTADOS LOCALES (Vital para Android)
               setNombre('');
               setCiudad('');
               setCantSub14(0);
@@ -53,8 +49,6 @@ const DatosClubScreen = ({ navigation }) => {
     }
   }, []);
 
-  // 2. Efecto de sincronización (Vigilante)
-  // Si el contexto cambia externamente, actualiza los inputs
   useEffect(() => {
     setNombre(datosInscripcion.club.nombre || '');
     setCiudad(datosInscripcion.club.ciudad || '');
@@ -63,7 +57,6 @@ const DatosClubScreen = ({ navigation }) => {
   }, [datosInscripcion.club]);
 
   const continuar = () => {
-    // Convertimos a número antes de validar
     const s14 = parseInt(cantSub14) || 0;
     const s16 = parseInt(cantSub16) || 0;
 
@@ -72,7 +65,6 @@ const DatosClubScreen = ({ navigation }) => {
       return;
     }
 
-    // Guardamos en el contexto
     actualizarClub({ 
       nombre: nombre.trim(), 
       ciudad: ciudad.trim(), 
