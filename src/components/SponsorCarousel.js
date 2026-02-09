@@ -12,8 +12,27 @@ import {
 } from 'react-native';
 
 
+const openInstagram = async (username) => {
+  const appUrl = `instagram://user?username=${username}`;
+const webUrl = `https://www.instagram.com/${username}/`;
+
+
+  try {
+    // Verifica si la app oficial puede manejar el esquema
+    const supported = await Linking.canOpenURL(appUrl);
+    if (supported) {
+      await Linking.openURL(appUrl);
+    } else {
+      await Linking.openURL(webUrl);
+    }
+  } catch (error) {
+    console.error("Error abriendo Instagram:", error);
+    await Linking.openURL(webUrl); // fallback final
+  }
+};
+
 const SPONSORS = [
-  { id: '1', image: require('../../assets/pureZone.png'), link: 'https://instagram.com/pure.zonespa' },
+  { id: '1', image: require('../../assets/pureZone.png'), link: () => openInstagram('pure.zonespa') },
   { id: '2', image: require('../../assets/LabDelMilagro.png'), link: 'https://wa.me/5493875145872' },
   { id: '3', image: require('../../assets/vetaSolutions.png'), link: 'https://instagram.com/veta.solutions' },
   { id: '4', image: require('../../assets/avg.png'), link: 'https://instagram.com/grupoagv' },
@@ -31,26 +50,6 @@ export default function SponsorCarousel() {
   const { width } = useWindowDimensions();
   const flatListRef = useRef(null);
   const [index, setIndex] = useState(0);
-
-const openInstagramWeb = async (username) => {
-  const webUrl = `https://www.instagram.com/${username}/`;
-
-  if (Platform.OS === 'android') {
-    const chromeIntent =
-      `intent://${webUrl.replace('https://', '')}` +
-      `#Intent;scheme=https;package=com.android.chrome;end`;
-
-    try {
-      await Linking.openURL(chromeIntent);
-      return;
-    } catch (e) {
-      await Linking.openURL(webUrl);
-    }
-  } else {
-    await Linking.openURL(webUrl);
-  }
-};
-
 
 const handlePress = async (url) => {
   try {
@@ -73,7 +72,7 @@ const handlePress = async (url) => {
       } else {
         // iOS y web
         await Linking.openURL(
-          cleanUrl.endsWith('/') ? cleanUrl : `${cleanUrl}/`
+          cleanUrl.endsWith('/') ? cleanUrl : ${cleanUrl}/
         );
       }
       return;
