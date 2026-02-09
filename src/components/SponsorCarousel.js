@@ -37,6 +37,13 @@ const handlePress = async (url) => {
   try {
     if (!url) return;
 
+    // 🌐 WEB (Netlify)
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+      return;
+    }
+
+    // 📱 MOBILE
     if (url.includes('instagram.com')) {
       const cleanUrl = url
         .replace(/^http:\/\//, 'https://')
@@ -47,13 +54,13 @@ const handlePress = async (url) => {
       const username = cleanUrl.split('/').pop();
       const igAppUrl = `instagram://user?username=${username}`;
 
-      // 1️⃣ Intentar app oficial
+      // 1️⃣ App Instagram
       if (await Linking.canOpenURL(igAppUrl)) {
         await Linking.openURL(igAppUrl);
         return;
       }
 
-      // 2️⃣ Android → Chrome
+      // 2️⃣ Android Chrome
       if (Platform.OS === 'android') {
         const intent = `intent://${cleanUrl.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`;
         try {
@@ -62,22 +69,23 @@ const handlePress = async (url) => {
         } catch {}
       }
 
-      // 3️⃣ Web normal
+      // 3️⃣ Fallback web
       await Linking.openURL(`${cleanUrl}/`);
       return;
     }
 
-    // WhatsApp / Web
+    // WhatsApp / Web comunes
     await Linking.openURL(url);
 
   } catch (e) {
     Alert.alert(
       'Abrir enlace',
-      'No se pudo abrir el enlace. Intentalo desde el navegador.'
+      'No se pudo abrir el enlace.'
     );
     console.log('Error link sponsor:', e);
   }
 };
+
 
 
 
