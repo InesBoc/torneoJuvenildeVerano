@@ -42,3 +42,5 @@ yarn-error.*
 
 # Local Netlify folder
 .netlify
+
+subirFixture/serviceAccount.json

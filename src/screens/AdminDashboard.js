@@ -22,7 +22,7 @@ export default function AdminDashboard() {
   const [tempNombres, setTempNombres] = useState({}); 
 
   useEffect(() => {
-    const q = query(collection(db, "inscripciones"), orderBy("fechaInscripcion", "desc"));
+   const q = query(collection(db, "inscripciones"), orderBy("fechaInscripcion", "desc"));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ 

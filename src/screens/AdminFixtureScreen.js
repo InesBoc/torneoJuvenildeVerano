@@ -13,38 +13,79 @@ export default function AdminFixtureScreen() {
   const [cargando, setCargando] = useState(true);
   const [categoria, setCategoria] = useState('Sub 14');
   const [editando, setEditando] = useState({});
-  const [zona, setZona] = useState('A');
+  const [zonaFiltro, setZonaFiltro] = useState('A'); // Cambié nombre para evitar confusión
 
   useEffect(() => {
     setCargando(true);
+    // 1. Buscamos todos los partidos de la categoría elegida
     const q = query(
       collection(db, "partidos"),
-      where("categoria", "==", categoria),
-      where("zona", "==", zona)
+      where("categoria", "==", categoria)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setPartidos(docs.sort((a, b) => Number(a.partido) - Number(b.partido)));
+      
+      // 2. FILTRADO MANUAL: Más flexible que el "where" de Firebase
+      let partidosFiltrados = docs;
+
+      if (zonaFiltro === 'A') {
+        partidosFiltrados = docs.filter(p => p.zona?.toUpperCase() === "ZONA A");
+      } else if (zonaFiltro === 'B') {
+        partidosFiltrados = docs.filter(p => p.zona?.toUpperCase() === "ZONA B");
+      } else {
+        // "Definición": Todo lo que NO sea Zona A ni Zona B
+        partidosFiltrados = docs.filter(p => !p.zona?.toUpperCase().includes("ZONA"));
+      }
+
+      // 3. ORDENADO: Extraemos el número del string "Part 1", "Part 10"
+      const ordenados = partidosFiltrados.sort((a, b) => {
+        const numA = parseInt(a.partido?.toString().replace(/[^0-9]/g, '')) || 0;
+        const numB = parseInt(b.partido?.toString().replace(/[^0-9]/g, '')) || 0;
+        return numA - numB;
+      });
+
+      setPartidos(ordenados);
       setCargando(false);
     });
+
     return () => unsubscribe();
-  }, [categoria, zona]);
+  }, [categoria, zonaFiltro]);
 
   const handleGuardar = async (partido) => {
     if (!partido.id) return;
-    const gL = editando[partido.id]?.golesLocal !== undefined ? editando[partido.id].golesLocal : partido.golesLocal;
-    const gV = editando[partido.id]?.golesVisitante !== undefined ? editando[partido.id].golesVisitante : partido.golesVisitante;
+
+    // 1. Obtenemos los valores de los inputs o mantenemos los que ya estaban
+    const gL = editando[partido.id]?.golesLocal !== undefined 
+               ? editando[partido.id].golesLocal 
+               : partido.golesLocal;
+    const gV = editando[partido.id]?.golesVisitante !== undefined 
+               ? editando[partido.id].golesVisitante 
+               : partido.golesVisitante;
+
+    // 2. Convertimos a número (importante para que la tabla sume y no concatene)
+    const golesLocalNum = parseInt(gL, 10);
+    const golesVisitanteNum = parseInt(gV, 10);
 
     try {
-      await updateDoc(doc(db, "partidos", partido.id), {
-        golesLocal: parseInt(gL) || 0,
-        golesVisitante: parseInt(gV) || 0,
-        jugado: true
+      const partidoRef = doc(db, "partidos", partido.id);
+      
+      await updateDoc(partidoRef, {
+        golesLocal: isNaN(golesLocalNum) ? 0 : golesLocalNum,
+        golesVisitante: isNaN(golesVisitanteNum) ? 0 : golesVisitanteNum,
+        jugado: true, // ESTO es lo que activa que se vea en FixtureScreen y en la Tabla
+        fechaActualizacion: new Date() // Opcional, para debug
       });
-      Alert.alert("Guardado", "✅ Resultado actualizado");
+
+      // Limpiar el estado de edición para este partido después de guardar
+      const nuevaEdicion = { ...editando };
+      delete nuevaEdicion[partido.id];
+      setEditando(nuevaEdicion);
+
+      Alert.alert("Éxito", "✅ Resultado guardado y tabla actualizada");
     } catch (e) {
-      Alert.alert("Error", e.message);
+      console.error("Error al guardar:", e);
+      Alert.alert("Error", "No se pudo actualizar el resultado.");
     }
   };
 
@@ -359,17 +400,32 @@ const generarPlanillaPartido = async (partido) => {
 
   return (
     <View style={globalStyles.mainContainer}>
+      {/* Selector de Categoría */}
       <View style={styles.selector}>
         {['Sub 14', 'Sub 16'].map(cat => (
-          <TouchableOpacity key={cat} style={[styles.btnCat, categoria === cat && styles.btnCatActive]} onPress={() => setCategoria(cat)}>
+          <TouchableOpacity 
+            key={cat} 
+            style={[styles.btnCat, categoria === cat && styles.btnCatActive]} 
+            onPress={() => setCategoria(cat)}
+          >
             <Text style={[styles.txtCat, categoria === cat && styles.txtCatActive]}>{cat}</Text>
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Selector de Zona */}
       <View style={styles.selector}>
-        {['A', 'B', 'Definición'].map(z => (
-          <TouchableOpacity key={z} style={[styles.btnCat, zona === z && { backgroundColor: '#333' }]} onPress={() => setZona(z)}>
-            <Text style={[styles.txtCat, zona === z && { color: '#fff' }]}>Zona {z}</Text>
+        {[
+          { id: 'A', label: 'Zona A' },
+          { id: 'B', label: 'Zona B' },
+          { id: 'Def', label: 'Definición (Finales)' }
+        ].map(z => (
+          <TouchableOpacity 
+            key={z.id} 
+            style={[styles.btnCat, zonaFiltro === z.id && { backgroundColor: '#333' }]} 
+            onPress={() => setZonaFiltro(z.id)}
+          >
+            <Text style={[styles.txtCat, zonaFiltro === z.id && { color: '#fff' }]}>{z.label}</Text>
           </TouchableOpacity>
         ))}
       </View>

@@ -28,7 +28,13 @@ const FixtureScreen = () => {
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const docsOrdenados = docs.sort((a, b) => Number(a.partido) - Number(b.partido));
+      
+      // ORDENAR: Ahora ordenamos extrayendo el número del string "Part 1", "Part 10", etc.
+      const docsOrdenados = docs.sort((a, b) => {
+        const numA = parseInt(a.partido?.toString().replace(/[^0-9]/g, '')) || 0;
+        const numB = parseInt(b.partido?.toString().replace(/[^0-9]/g, '')) || 0;
+        return numA - numB;
+      });
       
       setPartidos(docsOrdenados);
       calcularPosiciones(docsOrdenados); 
@@ -39,26 +45,37 @@ const FixtureScreen = () => {
 
   const calcularPosiciones = (datosPartidos) => {
     const stats = { A: {}, B: {} };
+    
     datosPartidos.forEach(p => {
-      const nro = Number(p.partido);
-      if (!p.jugado || nro > 12) return;
-      const zonaActual = (nro % 2 !== 0) ? "A" : "B";
+      // 1. Solo procesar si el partido se jugó y es de ZONA (Fase de grupos)
+      if (!p.jugado || !p.zona || !p.zona.toUpperCase().includes("ZONA")) return;
+      
+      // 2. Determinar si es Zona A o B
+      const zonaActual = p.zona.toUpperCase().includes("ZONA A") ? "A" : "B";
+
       [p.local, p.visitante].forEach(eq => {
         if (!stats[zonaActual][eq]) {
           stats[zonaActual][eq] = { equipo: eq, pj: 0, pts: 0, gf: 0, gc: 0, dg: 0 };
         }
       });
+
       const loc = stats[zonaActual][p.local];
       const vis = stats[zonaActual][p.visitante];
+
       loc.pj += 1; vis.pj += 1;
-      loc.gf += (p.golesLocal || 0); loc.gc += (p.golesVisitante || 0);
-      vis.gf += (p.golesVisitante || 0); vis.gc += (p.golesLocal || 0);
-      if (p.golesLocal > p.golesVisitante) loc.pts += 3;
-      else if (p.golesVisitante > p.golesLocal) vis.pts += 3;
+      loc.gf += Number(p.golesLocal || 0); 
+      loc.gc += Number(p.golesVisitante || 0);
+      vis.gf += Number(p.golesVisitante || 0); 
+      vis.gc += Number(p.golesLocal || 0);
+
+      if (Number(p.golesLocal) > Number(p.golesVisitante)) loc.pts += 3;
+      else if (Number(p.golesVisitante) > Number(p.golesLocal)) vis.pts += 3;
       else { loc.pts += 1; vis.pts += 1; }
+
       loc.dg = loc.gf - loc.gc;
       vis.dg = vis.gf - vis.gc;
     });
+
     setPosiciones({
       A: Object.values(stats.A).sort((a, b) => b.pts - a.pts || b.dg - a.dg),
       B: Object.values(stats.B).sort((a, b) => b.pts - a.pts || b.dg - a.dg)
@@ -71,20 +88,12 @@ const FixtureScreen = () => {
   };
 
   return (
-   <View style={{ flex: 1, height: height, backgroundColor: '#fff' }}>
-       <View style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 100,
-      }}>
+    <View style={{ flex: 1, height: height, backgroundColor: '#fff' }}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 100 }}>
 
-        <ScrollView
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
+        <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={{ flexGrow: 1 }}>
         <View style={globalStyles.scrollContent}>
+            
             <TouchableOpacity style={styles.btnPdf} onPress={descargarPDF}>
               <Text style={styles.btnPdfText}>📄 DESCARGAR REGLAMENTO (PDF)</Text>
             </TouchableOpacity>
@@ -105,14 +114,15 @@ const FixtureScreen = () => {
               <ActivityIndicator size="large" color="#D32F2F" />
             ) : (
               <>
-                <Text style={styles.tituloSeccion}>Fase de Zona {categoriaVisible}</Text>
-                {partidos.filter(p => Number(p.partido) <= 12).map((item) => (
+                {/* --- SECCIÓN 1: PARTIDOS DE GRUPO --- */}
+                <Text style={styles.tituloSeccion}>Fase de Grupos {categoriaVisible}</Text>
+                {partidos.filter(p => p.zona?.toUpperCase().includes("ZONA")).map((item) => (
                   <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
                     <View style={styles.infoHora}>
-                      <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia || 'Sáb'}</Text>
+                      <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia}</Text>
                       <Text style={styles.horaText}>{item.hora}</Text>  
                       <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
-                      <Text style={[styles.canchaText, { color: '#D32F2F', fontWeight: 'bold' }]}>P. {item.partido}</Text>
+                      <Text style={[styles.canchaText, { color: '#D32F2F', fontWeight: 'bold' }]}>{item.partido}</Text>
                     </View>
                     <View style={styles.equiposContainer}>
                       <Text style={styles.equipoText}>{item.local}</Text>
@@ -126,7 +136,8 @@ const FixtureScreen = () => {
                   </View>
                 ))}
 
-                <Text style={[styles.tituloSeccion, { marginTop: 30 }]}>Tablas de Posiciones {categoriaVisible}</Text>
+                {/* --- SECCIÓN 2: TABLAS --- */}
+                <Text style={[styles.tituloSeccion, { marginTop: 30 }]}>Posiciones {categoriaVisible}</Text>
                 {['A', 'B'].map((zona) => (
                   <View key={zona} style={{ marginBottom: 30 }}>
                     <Text style={styles.subTitulo}>ZONA {zona} </Text>
@@ -138,7 +149,7 @@ const FixtureScreen = () => {
                         <Text style={[styles.colDato, { color: 'white' }]}>DG</Text>
                       </View>
                       {posiciones[zona].length === 0 ? (
-                        <Text style={{padding: 20, textAlign: 'center', color: '#999'}}>No hay partidos jugados aún.</Text>
+                        <Text style={{padding: 20, textAlign: 'center', color: '#999'}}>Esperando resultados...</Text>
                       ) : (
                         posiciones[zona].map((item, index) => (
                           <View key={index} style={[styles.tablaFila, index % 2 === 0 ? { backgroundColor: '#F9F9F9' } : { backgroundColor: '#FFF' }]}>
@@ -153,14 +164,15 @@ const FixtureScreen = () => {
                   </View>
                 ))}
 
+                {/* --- SECCIÓN 3: FINALES --- */}
                 <View style={styles.divider} />
                 <Text style={styles.tituloSeccion}>Fases Finales (Dom)</Text>
-                {partidos.filter(p => Number(p.partido) > 12).map(item => (
-                  <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
+                {partidos.filter(p => !p.zona?.toUpperCase().includes("ZONA")).map(item => (
+                  <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#000' }]}>
                     <View style={styles.infoHora}>
                        <Text style={styles.horaText}>{item.hora}</Text>
                        <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
-                       <Text style={[styles.canchaText, { color: '#D32F2F' }]}>P. {item.partido}</Text>
+                       <Text style={[styles.canchaText, { color: '#D32F2F' }]}>{item.partido}</Text>
                     </View>
                     <View style={styles.equiposContainer}>
                       <Text style={styles.equipoText}>{item.local}</Text>
@@ -174,15 +186,13 @@ const FixtureScreen = () => {
           </View>
         </ScrollView>
       
-
-     <View style={styles.footerContainer}>
+      <View style={styles.footerContainer}>
         <SponsorCarousel />
       </View>
       </View>
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
  footerContainer: {
