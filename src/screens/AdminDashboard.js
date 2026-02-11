@@ -6,7 +6,6 @@ import {
   FlatList, 
   TouchableOpacity, 
   TextInput,
-  Linking, 
   StyleSheet, 
   ActivityIndicator,
   Alert 
@@ -22,7 +21,7 @@ export default function AdminDashboard() {
   const [tempNombres, setTempNombres] = useState({}); 
 
   useEffect(() => {
-   const q = query(collection(db, "inscripciones"), orderBy("fechaInscripcion", "desc"));
+    const q = query(collection(db, "inscripciones"), orderBy("fechaInscripcion", "desc"));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ 
@@ -39,9 +38,11 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, []);
 
-  const vincularEquipoIndiv = async (inscripcion, equipoIndex, nuevoNombre) => {
-    if (!nuevoNombre) {
-      Alert.alert("Atención", "Escribe el nombre como figura en el fixture");
+  const vincularEquipoIndiv = async (inscripcion, equipoIndex, textoInput) => {
+    const nombreAFijar = (textoInput !== undefined) ? textoInput : inscripcion.equipos[equipoIndex].nombreFixture;
+    
+    if (!nombreAFijar || nombreAFijar.trim() === "") {
+      Alert.alert("Atención", "Escribe el nombre del equipo tal cual aparece en el fixture.");
       return;
     }
 
@@ -49,17 +50,23 @@ export default function AdminDashboard() {
       const nuevosEquipos = [...inscripcion.equipos];
       nuevosEquipos[equipoIndex] = {
         ...nuevosEquipos[equipoIndex],
-        nombreFixture: nuevoNombre.trim()
+        nombreFixture: nombreAFijar.trim()
       };
 
       await updateDoc(doc(db, "inscripciones", inscripcion.id), { 
         equipos: nuevosEquipos 
       });
       
-      Alert.alert("Éxito", "Equipo vinculado correctamente");
+      Alert.alert("✅ Vinculado", `El equipo ahora se identifica como: ${nombreAFijar.trim()}`);
+      
+      const inputKey = `${inscripcion.id}-${equipoIndex}`;
+      const nuevosTemporales = { ...tempNombres };
+      delete nuevosTemporales[inputKey];
+      setTempNombres(nuevosTemporales);
+
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "No se pudo vincular el equipo");
+      Alert.alert("Error", "No se pudo guardar la vinculación.");
     }
   };
 
@@ -98,59 +105,73 @@ export default function AdminDashboard() {
 
             <View style={styles.headerInfo}>
               <Text style={styles.headerText}>
-                Total de inscripciones: <Text style={{ fontWeight: 'bold' }}>{inscripciones.length}</Text>
+                Clubes inscriptos: <Text style={{ fontWeight: 'bold' }}>{inscripciones.length}</Text>
               </Text>
             </View>
           </View>
         }
         renderItem={({ item: inscripcion }) => (
           <View style={styles.adminCard}>
-            <Text style={styles.clubTitle}>{inscripcion.club?.nombre}</Text>
-            <Text style={{fontSize: 10, color: '#999', marginBottom: 10}}>ID: {inscripcion.id}</Text>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+              <Text style={styles.clubTitle}>{inscripcion.club?.nombre}</Text>
+              <View style={[styles.badge, {backgroundColor: inscripcion.estado === 'Aprobada' ? '#2e7d32' : '#ffa000'}]}>
+                <Text style={styles.badgeText}>{inscripcion.estado}</Text>
+              </View>
+            </View>
             
             <View style={styles.mappingSection}>
-              <Text style={styles.labelMapping}>EQUIPOS INSCRIPTOS (Vincular cada uno):</Text>
+              <Text style={styles.labelMapping}>VINCULAR CON NOMBRE DE FIXTURE:</Text>
               
               {inscripcion.equipos?.map((eq, index) => {
                 const inputKey = `${inscripcion.id}-${index}`;
+                const yaVinculado = eq.nombreFixture && eq.nombreFixture.length > 0;
+                const valorMostrar = tempNombres[inputKey] !== undefined 
+                                    ? tempNombres[inputKey] 
+                                    : (eq.nombreFixture || "");
+
                 return (
                   <View key={index} style={styles.equipoVinculoRow}>
-                    <View style={{flex: 1}}>
-                      <Text style={styles.txtCategoria}>{eq.categoria} - {eq.nombre}</Text>
-                      <View style={styles.rowMapping}>
-                        <TextInput 
-                          style={styles.inputMapping}
-                          placeholder="Nombre en Fixture (ej: Tigres A)"
-                          defaultValue={eq.nombreFixture || ""}
-                          onChangeText={(text) => setTempNombres({ ...tempNombres, [inputKey]: text })} 
-                        />
-                        <TouchableOpacity 
-                          style={styles.btnVinculoMini}
-                          onPress={() => vincularEquipoIndiv(inscripcion, index, tempNombres[inputKey] || eq.nombreFixture)}
-                        >
-                          <Text style={styles.btnStatusText}>OK</Text>
-                        </TouchableOpacity>
-                      </View>
+                    <Text style={styles.txtCategoria}>Inscripto como: {eq.nombre}</Text>
+                    <View style={styles.rowMapping}>
+                      <TextInput 
+                        style={[
+                          styles.inputMapping, 
+                          yaVinculado && { borderColor: '#2e7d32', backgroundColor: '#f0fdf4' }
+                        ]}
+                        placeholder="Nombre exacto en Fixture"
+                        value={valorMostrar}
+                        onChangeText={(text) => setTempNombres({ ...tempNombres, [inputKey]: text })} 
+                      />
+                      <TouchableOpacity 
+                        style={[
+                          styles.btnVinculoMini, 
+                          { backgroundColor: yaVinculado ? '#2e7d32' : '#333' }
+                        ]}
+                        onPress={() => vincularEquipoIndiv(inscripcion, index, tempNombres[inputKey])}
+                      >
+                        <Text style={styles.btnStatusText}>
+                          {yaVinculado ? "ACTUALIZAR" : "VINCULAR"}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
+                    {yaVinculado && (
+                      <Text style={{fontSize: 9, color: '#2e7d32', marginTop: 4, fontWeight: 'bold'}}>
+                        ✓ VINCULADO CORRECTAMENTE
+                      </Text>
+                    )}
                   </View>
                 );
               })}
             </View>
 
             <View style={styles.actionRow}>
+              <Text style={{fontSize: 12, color: '#666'}}>Ciudad: {inscripcion.club?.ciudad}</Text>
               <TouchableOpacity 
-                style={styles.btnComprobante} 
-                onPress={() => Linking.openURL(inscripcion.comprobanteUrl)}
-              >
-                <Text style={styles.btnLinkText}>Ver Pago 📄</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.btnStatus, { backgroundColor: inscripcion.estado === 'Aprobada' ? '#2e7d32' : '#ffa000' }]} 
+                style={[styles.btnStatus, { backgroundColor: inscripcion.estado === 'Aprobada' ? '#666' : '#2e7d32' }]} 
                 onPress={() => cambiarEstado(inscripcion.id, inscripcion.estado === 'Aprobada' ? 'Pendiente' : 'Aprobada')}
               >
                 <Text style={styles.btnStatusText}>
-                  {inscripcion.estado === 'Aprobada' ? 'Aprobado ✅' : 'Aprobar'}
+                  {inscripcion.estado === 'Aprobada' ? 'Pasar a Pendiente' : 'Aprobar Club'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -167,18 +188,17 @@ const styles = StyleSheet.create({
   headerInfo: { padding: 20, backgroundColor: '#f8f9fa', borderBottomWidth: 1, borderBottomColor: '#eee', marginTop: 10 },
   headerText: { fontSize: 16, color: '#333' },
   adminCard: { backgroundColor: '#fff', marginHorizontal: 20, marginVertical: 10, padding: 15, borderRadius: 12, elevation: 5 },
-  clubTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  clubTitle: { fontSize: 18, fontWeight: 'bold', color: '#D32F2F', flex: 1 },
+  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, alignSelf: 'flex-start' },
+  badgeText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
   actionRow: { flexDirection: 'row', marginTop: 15, justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 10 },
-  btnComprobante: { borderBottomWidth: 1, borderColor: '#3498db' },
-  btnLinkText: { color: '#3498db', fontWeight: 'bold' },
   btnStatus: { paddingVertical: 8, paddingHorizontal: 15, borderRadius: 8 },
-  btnStatusText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
-  
-  mappingSection: { marginTop: 5 },
-  labelMapping: { fontSize: 11, fontWeight: 'bold', color: '#D32F2F', marginBottom: 8 },
-  txtCategoria: { fontSize: 12, fontWeight: 'bold', color: '#555', marginBottom: 4 },
-  equipoVinculoRow: { marginBottom: 12, backgroundColor: '#f9f9f9', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#eee' },
-  inputMapping: { backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 5, flex: 1, fontSize: 12, borderWidth: 1, borderColor: '#ccc' },
-  rowMapping: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  btnVinculoMini: { backgroundColor: '#333', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 5 }
+  btnStatusText: { color: '#fff', fontWeight: 'bold', fontSize: 11 },
+  mappingSection: { marginTop: 15 },
+  labelMapping: { fontSize: 10, fontWeight: 'bold', color: '#666', marginBottom: 8, letterSpacing: 1 },
+  txtCategoria: { fontSize: 11, color: '#888', marginBottom: 4 },
+  equipoVinculoRow: { marginBottom: 12, backgroundColor: '#fdfdfd', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#eee' },
+  inputMapping: { backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 5, flex: 1, fontSize: 13, borderWidth: 1, borderColor: '#ccc', color: '#333' },
+  rowMapping: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  btnVinculoMini: { backgroundColor: '#D32F2F', paddingVertical: 10, paddingHorizontal: 15, borderRadius: 5 }
 });

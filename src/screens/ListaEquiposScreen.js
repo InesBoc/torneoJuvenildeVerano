@@ -121,7 +121,7 @@ useEffect(() => {
               disabled={!todosListos}
             >
               <Text style={globalStyles.btnText}>
-                {todosListos ? "Continuar al Pago" : "Faltan listas por completar"}
+                {todosListos ? "Continuar para ver tus listas" : "Faltan listas por completar"}
               </Text>
             </TouchableOpacity>
           </>

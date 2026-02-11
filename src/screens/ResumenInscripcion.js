@@ -8,21 +8,17 @@ import { View,
         ActivityIndicator, 
         StyleSheet} from 'react-native';
 
-import { db, auth, storage } from '../services/firebase';
+import { db, auth } from '../services/firebase'; // Quitamos storage
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-import * as ImagePicker from 'expo-image-picker';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
 import { useInscripcion } from '../context/InscripcionContext';
 import { globalStyles } from '../styles/globalStyles';
 
-
 const ResumenInscripcion = ({ navigation }) => {
   const { datosInscripcion, limpiarRegistro } = useInscripcion();
-  const [imagenCargada, setImagenCargada] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
   const mostrarAlerta = (titulo, mensaje) => {
@@ -30,17 +26,6 @@ const ResumenInscripcion = ({ navigation }) => {
       window.alert(`${titulo}: ${mensaje}`);
     } else {
       Alert.alert(titulo, mensaje);
-    }
-  };
-
-  const seleccionarImagen = async () => {
-    let resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.6,
-    });
-    if (!resultado.canceled) {
-      setImagenCargada(resultado.assets[0].uri);
     }
   };
 
@@ -61,12 +46,9 @@ const ResumenInscripcion = ({ navigation }) => {
             .team-card { margin-top: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 10px; page-break-inside: avoid; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th { background-color: #f2f2f2; text-align: left; padding: 10px; border-bottom: 2px solid #D32F2F; }
-            th.num-col { width: 40px; }
             td { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
             .staff-section { margin-top: 15px; background-color: #f9f9f9; padding: 10px; border-radius: 5px; }
             .staff-title { font-weight: bold; font-size: 14px; color: #D32F2F; margin-bottom: 5px; border-bottom: 1px solid #ccc; }
-            .staff-grid { display: flex; flex-wrap: wrap; }
-            .staff-item { width: 50%; font-size: 13px; margin-bottom: 4px; }
           </style>
         </head>
         <body>
@@ -82,7 +64,7 @@ const ResumenInscripcion = ({ navigation }) => {
               <table>
                 <thead>
                   <tr>
-                    <th class="num-col">N°</th>
+                    <th>N°</th>
                     <th>Jugadora</th>
                     <th>DNI</th>
                     <th>F. Nac.</th>
@@ -99,15 +81,6 @@ const ResumenInscripcion = ({ navigation }) => {
                   `).join('')}
                 </tbody>
               </table>
-              <div class="staff-section">
-                <div class="staff-title">CUERPO TÉCNICO</div>
-                <div class="staff-grid">
-                  <div class="staff-item"><strong>DT:</strong> ${eq.staff?.dt || '---'}</div>
-                  <div class="staff-item"><strong>AC:</strong> ${eq.staff?.ac || '---'}</div>
-                  <div class="staff-item"><strong>PF:</strong> ${eq.staff?.pf || '---'}</div>
-                  <div class="staff-item"><strong>Jefe:</strong> ${eq.staff?.jefe || '---'}</div>
-                </div>
-              </div>
             </div>
           `).join('')}
         </body>
@@ -134,28 +107,12 @@ const ResumenInscripcion = ({ navigation }) => {
       mostrarAlerta("Error", "Debes agregar al menos un equipo");
       return;
     }
-    if (!imagenCargada) {
-      mostrarAlerta("Atención", "Sube el comprobante primero");
-      return;
-    }
 
     setEnviando(true);
     
     try {
       const user = auth.currentUser;
       const uidFinal = user ? user.uid : "anonimo";
-      let urlPublica = "no_image_url";
-
-     
-      try {
-        const response = await fetch(imagenCargada);
-        const blob = await response.blob();
-        const storageRef = ref(storage, `comprobantes/${uidFinal}_${Date.now()}.jpg`);
-        await uploadBytes(storageRef, blob);
-        urlPublica = await getDownloadURL(storageRef);
-      } catch (e) { 
-        console.error("Error Storage:", e); 
-      }
 
       const payload = {
         usuarioId: uidFinal,
@@ -169,7 +126,7 @@ const ResumenInscripcion = ({ navigation }) => {
           jugadoras: eq.jugadoras,
           staff: eq.staff || {}
         })),
-        comprobanteUrl: urlPublica,
+        comprobanteUrl: "sin_comprobante", // Valor por defecto ahora que no se sube
         fechaInscripcion: serverTimestamp(),
         estado: 'Pendiente'
       };
@@ -178,7 +135,6 @@ const ResumenInscripcion = ({ navigation }) => {
 
       setEnviando(false);
 
-      
       if (Platform.OS === 'web') {
         window.alert("¡Éxito! Tu inscripción ha sido enviada.");
         limpiarRegistro();
@@ -226,30 +182,22 @@ const ResumenInscripcion = ({ navigation }) => {
         <View style={styles.divider} />
 
         <TouchableOpacity 
-          style={[styles.btnUpload, imagenCargada && {borderColor: '#2e7d32', backgroundColor: '#e8f5e9'}]} 
-          onPress={seleccionarImagen}
-        >
-          <Text style={{color: imagenCargada ? '#2e7d32' : '#666', fontWeight: 'bold', textAlign: 'center'}}>
-            {imagenCargada ? "✅ COMPROBANTE CARGADO" : "📸 SUBIR FOTO DEL COMPROBANTE"}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[globalStyles.input, { backgroundColor: '#D32F2F', marginTop: 30, alignItems: 'center', justifyContent: 'center' }]} 
+          style={[globalStyles.input, { backgroundColor: '#D32F2F', marginTop: 10, alignItems: 'center', justifyContent: 'center' }]} 
           onPress={confirmarInscripcion}
           disabled={enviando}
         >
           {enviando ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={globalStyles.btnText}>ENVIAR TODO Y FINALIZAR</Text>
+            <Text style={globalStyles.btnText}>ENVIAR INSCRIPCIÓN FINAL</Text>
           )}
         </TouchableOpacity>
+
+        <Text style={styles.infoText}>Al enviar, los organizadores recibirán tu lista de buena fe automáticamente.</Text>
       </View>
     </ScrollView>
   );
 };
-
 
 const styles = StyleSheet.create({
   resumenCard: { backgroundColor: '#fff', padding: 20, borderRadius: 15, elevation: 3, marginBottom: 20 },
@@ -260,7 +208,7 @@ const styles = StyleSheet.create({
   equipoItem: { fontSize: 15, marginBottom: 5, color: '#444' },
   btnDescarga: { padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#D32F2F', alignItems: 'center', marginBottom: 10 },
   btnDescargaText: { color: '#D32F2F', fontWeight: 'bold', fontSize: 13 },
-  btnUpload: { padding: 25, borderWidth: 2, borderStyle: 'dashed', borderColor: '#ccc', borderRadius: 10, alignItems: 'center', justifyContent: 'center' }
+  infoText: { textAlign: 'center', color: '#888', fontSize: 12, marginTop: 15, paddingHorizontal: 20 }
 });
 
 export default ResumenInscripcion;
