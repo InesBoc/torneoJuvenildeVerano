@@ -17,7 +17,7 @@ import SponsorCarousel from '../components/SponsorCarousel';
 const FixtureScreen = () => {
   const [categoriaVisible, setCategoriaVisible] = useState('Sub 14');
   const [partidos, setPartidos] = useState([]);
-  const [posiciones, setPosiciones] = useState({ A: [], B: [] }); 
+  const [posiciones, setPosiciones] = useState([]); // Ahora es un array simple
   const [cargando, setCargando] = useState(true);
 
   const { height } = useWindowDimensions();
@@ -29,10 +29,10 @@ const FixtureScreen = () => {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const docs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // ORDENAR: Ahora ordenamos extrayendo el número del string "Part 1", "Part 10", etc.
+      // Ordenar por el número de partido (campo "partido" que ahora es un string "1", "2", etc.)
       const docsOrdenados = docs.sort((a, b) => {
-        const numA = parseInt(a.partido?.toString().replace(/[^0-9]/g, '')) || 0;
-        const numB = parseInt(b.partido?.toString().replace(/[^0-9]/g, '')) || 0;
+        const numA = parseInt(a.partido) || 0;
+        const numB = parseInt(b.partido) || 0;
         return numA - numB;
       });
       
@@ -44,23 +44,19 @@ const FixtureScreen = () => {
   }, [categoriaVisible]);
 
   const calcularPosiciones = (datosPartidos) => {
-    const stats = { A: {}, B: {} };
+    const stats = {};
     
     datosPartidos.forEach(p => {
-      // 1. Solo procesar si el partido se jugó y es de ZONA (Fase de grupos)
-      if (!p.jugado || !p.zona || !p.zona.toUpperCase().includes("ZONA")) return;
-      
-      // 2. Determinar si es Zona A o B
-      const zonaActual = p.zona.toUpperCase().includes("ZONA A") ? "A" : "B";
+      if (!p.jugado) return; // Solo procesar si el partido ya se jugó
 
       [p.local, p.visitante].forEach(eq => {
-        if (!stats[zonaActual][eq]) {
-          stats[zonaActual][eq] = { equipo: eq, pj: 0, pts: 0, gf: 0, gc: 0, dg: 0 };
+        if (!stats[eq]) {
+          stats[eq] = { equipo: eq, pj: 0, pts: 0, gf: 0, gc: 0, dg: 0 };
         }
       });
 
-      const loc = stats[zonaActual][p.local];
-      const vis = stats[zonaActual][p.visitante];
+      const loc = stats[p.local];
+      const vis = stats[p.visitante];
 
       loc.pj += 1; vis.pj += 1;
       loc.gf += Number(p.golesLocal || 0); 
@@ -76,10 +72,9 @@ const FixtureScreen = () => {
       vis.dg = vis.gf - vis.gc;
     });
 
-    setPosiciones({
-      A: Object.values(stats.A).sort((a, b) => b.pts - a.pts || b.dg - a.dg),
-      B: Object.values(stats.B).sort((a, b) => b.pts - a.pts || b.dg - a.dg)
-    });
+    // Convertir objeto a array y ordenar por puntos y diferencia de gol
+    const tablaOrdenada = Object.values(stats).sort((a, b) => b.pts - a.pts || b.dg - a.dg);
+    setPosiciones(tablaOrdenada);
   };
 
   const descargarPDF = () => {
@@ -114,15 +109,15 @@ const FixtureScreen = () => {
               <ActivityIndicator size="large" color="#D32F2F" />
             ) : (
               <>
-                {/* --- SECCIÓN 1: PARTIDOS DE GRUPO --- */}
-                <Text style={styles.tituloSeccion}>Fase de Grupos {categoriaVisible}</Text>
-                {partidos.filter(p => p.zona?.toUpperCase().includes("ZONA")).map((item) => (
-                  <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#D32F2F' }]}>
+                {/* --- SECCIÓN 1: FIXTURE COMPLETO --- */}
+                <Text style={styles.tituloSeccion}>Fixture {categoriaVisible}</Text>
+                {partidos.map((item) => (
+                  <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: item.dia === 'Sábado' ? '#D32F2F' : '#000' }]}>
                     <View style={styles.infoHora}>
-                      <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia}</Text>
+                      <Text style={{ fontSize: 10, color: '#666', fontWeight: 'bold' }}>{item.dia.toUpperCase()}</Text>
                       <Text style={styles.horaText}>{item.hora}</Text>  
                       <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
-                      <Text style={[styles.canchaText, { color: '#D32F2F', fontWeight: 'bold' }]}>{item.partido}</Text>
+                      <Text style={[styles.canchaText, { color: '#D32F2F', fontWeight: 'bold' }]}>Part. {item.partido}</Text>
                     </View>
                     <View style={styles.equiposContainer}>
                       <Text style={styles.equipoText}>{item.local}</Text>
@@ -136,51 +131,29 @@ const FixtureScreen = () => {
                   </View>
                 ))}
 
-                {/* --- SECCIÓN 2: TABLAS --- */}
-                <Text style={[styles.tituloSeccion, { marginTop: 30 }]}>Posiciones {categoriaVisible}</Text>
-                {['A', 'B'].map((zona) => (
-                  <View key={zona} style={{ marginBottom: 30 }}>
-                    <Text style={styles.subTitulo}>ZONA {zona} </Text>
-                    <View style={styles.tablaContainer}>
-                      <View style={styles.tablaHeader}>
-                        <Text style={[styles.colEquipo, { color: 'white' }]}>Equipo</Text>
-                        <Text style={[styles.colDato, { color: 'white' }]}>PTS</Text>
-                        <Text style={[styles.colDato, { color: 'white' }]}>PJ</Text>
-                        <Text style={[styles.colDato, { color: 'white' }]}>DG</Text>
+                {/* --- SECCIÓN 2: TABLA ÚNICA DE POSICIONES --- */}
+                <Text style={[styles.tituloSeccion, { marginTop: 30 }]}>Tabla de Posiciones</Text>
+                <View style={styles.tablaContainer}>
+                  <View style={styles.tablaHeader}>
+                    <Text style={[styles.colEquipo, { color: 'white' }]}>Equipo</Text>
+                    <Text style={[styles.colDato, { color: 'white' }]}>PTS</Text>
+                    <Text style={[styles.colDato, { color: 'white' }]}>PJ</Text>
+                    <Text style={[styles.colDato, { color: 'white' }]}>DG</Text>
+                  </View>
+                  {posiciones.length === 0 ? (
+                    <Text style={{padding: 20, textAlign: 'center', color: '#999'}}>Esperando resultados...</Text>
+                  ) : (
+                    posiciones.map((item, index) => (
+                      <View key={index} style={[styles.tablaFila, index % 2 === 0 ? { backgroundColor: '#F9F9F9' } : { backgroundColor: '#FFF' }]}>
+                        <Text style={styles.colEquipo}>{index + 1}. {item.equipo}</Text>
+                        <Text style={[styles.colDato, { fontWeight: 'bold' }]}>{item.pts}</Text>
+                        <Text style={styles.colDato}>{item.pj}</Text>
+                        <Text style={styles.colDato}>{item.dg}</Text>
                       </View>
-                      {posiciones[zona].length === 0 ? (
-                        <Text style={{padding: 20, textAlign: 'center', color: '#999'}}>Esperando resultados...</Text>
-                      ) : (
-                        posiciones[zona].map((item, index) => (
-                          <View key={index} style={[styles.tablaFila, index % 2 === 0 ? { backgroundColor: '#F9F9F9' } : { backgroundColor: '#FFF' }]}>
-                            <Text style={styles.colEquipo}>{index + 1}. {item.equipo}</Text>
-                            <Text style={[styles.colDato, { fontWeight: 'bold' }]}>{item.pts}</Text>
-                            <Text style={styles.colDato}>{item.pj}</Text>
-                            <Text style={styles.colDato}>{item.dg}</Text>
-                          </View>
-                        ))
-                      )}
-                    </View>
-                  </View>
-                ))}
-
-                {/* --- SECCIÓN 3: FINALES --- */}
-                <View style={styles.divider} />
-                <Text style={styles.tituloSeccion}>Fases Finales (Dom)</Text>
-                {partidos.filter(p => !p.zona?.toUpperCase().includes("ZONA")).map(item => (
-                  <View key={item.id} style={[styles.tarjetaPartido, { borderLeftWidth: 5, borderLeftColor: '#000' }]}>
-                    <View style={styles.infoHora}>
-                       <Text style={styles.horaText}>{item.hora}</Text>
-                       <Text style={styles.canchaText}>Cancha {item.cancha}</Text>
-                       <Text style={[styles.canchaText, { color: '#D32F2F' }]}>{item.partido}</Text>
-                    </View>
-                    <View style={styles.equiposContainer}>
-                      <Text style={styles.equipoText}>{item.local}</Text>
-                      <Text style={styles.vsText}>{item.jugado ? `${item.golesLocal} - ${item.golesVisitante}` : 'VS'}</Text>
-                      <Text style={styles.equipoText}>{item.visitante}</Text>
-                    </View>
-                  </View>
-                ))}
+                    ))
+                  )}
+                </View>
+                <View style={{height: 50}} /> 
               </>
             )}
           </View>

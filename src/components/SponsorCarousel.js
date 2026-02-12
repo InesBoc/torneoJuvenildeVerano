@@ -25,6 +25,7 @@ const SPONSORS = [
   { id: '10', image: require('../../assets/laciosForEver.png'), link: 'https://wa.me/5493876830163' },
   { id: '11', image: require('../../assets/luchoAgencia.png'), link: 'https://wa.me/5493876841573' },
   { id: '12', image: require('../../assets/inmobiliariaA3.png'), link: 'https://agueropropiedades.com.ar/' },
+  { id: '13', image: require('../../assets/mater.png'), link: 'https://www.mater-salta.com/' },
 ];
 
 export default function SponsorCarousel() {

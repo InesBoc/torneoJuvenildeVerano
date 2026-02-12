@@ -13,11 +13,10 @@ export default function AdminFixtureScreen() {
   const [cargando, setCargando] = useState(true);
   const [categoria, setCategoria] = useState('Sub 14');
   const [editando, setEditando] = useState({});
-  const [zonaFiltro, setZonaFiltro] = useState('A'); // Cambié nombre para evitar confusión
 
   useEffect(() => {
     setCargando(true);
-    // 1. Buscamos todos los partidos de la categoría elegida
+    // Buscamos todos los partidos de la categoría elegida (ZONA ÚNICA)
     const q = query(
       collection(db, "partidos"),
       where("categoria", "==", categoria)
@@ -26,22 +25,10 @@ export default function AdminFixtureScreen() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       
-      // 2. FILTRADO MANUAL: Más flexible que el "where" de Firebase
-      let partidosFiltrados = docs;
-
-      if (zonaFiltro === 'A') {
-        partidosFiltrados = docs.filter(p => p.zona?.toUpperCase() === "ZONA A");
-      } else if (zonaFiltro === 'B') {
-        partidosFiltrados = docs.filter(p => p.zona?.toUpperCase() === "ZONA B");
-      } else {
-        // "Definición": Todo lo que NO sea Zona A ni Zona B
-        partidosFiltrados = docs.filter(p => !p.zona?.toUpperCase().includes("ZONA"));
-      }
-
-      // 3. ORDENADO: Extraemos el número del string "Part 1", "Part 10"
-      const ordenados = partidosFiltrados.sort((a, b) => {
-        const numA = parseInt(a.partido?.toString().replace(/[^0-9]/g, '')) || 0;
-        const numB = parseInt(b.partido?.toString().replace(/[^0-9]/g, '')) || 0;
+      // Ordenar numéricamente por el número de partido
+      const ordenados = docs.sort((a, b) => {
+        const numA = parseInt(a.partido) || 0;
+        const numB = parseInt(b.partido) || 0;
         return numA - numB;
       });
 
@@ -50,12 +37,11 @@ export default function AdminFixtureScreen() {
     });
 
     return () => unsubscribe();
-  }, [categoria, zonaFiltro]);
+  }, [categoria]);
 
   const handleGuardar = async (partido) => {
     if (!partido.id) return;
 
-    // 1. Obtenemos los valores de los inputs o mantenemos los que ya estaban
     const gL = editando[partido.id]?.golesLocal !== undefined 
                ? editando[partido.id].golesLocal 
                : partido.golesLocal;
@@ -63,7 +49,6 @@ export default function AdminFixtureScreen() {
                ? editando[partido.id].golesVisitante 
                : partido.golesVisitante;
 
-    // 2. Convertimos a número (importante para que la tabla sume y no concatene)
     const golesLocalNum = parseInt(gL, 10);
     const golesVisitanteNum = parseInt(gV, 10);
 
@@ -73,51 +58,48 @@ export default function AdminFixtureScreen() {
       await updateDoc(partidoRef, {
         golesLocal: isNaN(golesLocalNum) ? 0 : golesLocalNum,
         golesVisitante: isNaN(golesVisitanteNum) ? 0 : golesVisitanteNum,
-        jugado: true, // ESTO es lo que activa que se vea en FixtureScreen y en la Tabla
-        fechaActualizacion: new Date() // Opcional, para debug
+        jugado: true,
+        fechaActualizacion: new Date()
       });
 
-      // Limpiar el estado de edición para este partido después de guardar
       const nuevaEdicion = { ...editando };
       delete nuevaEdicion[partido.id];
       setEditando(nuevaEdicion);
 
-      Alert.alert("Éxito", "✅ Resultado guardado y tabla actualizada");
+      Alert.alert("Éxito", "✅ Resultado guardado. La tabla de posiciones se ha actualizado.");
     } catch (e) {
       console.error("Error al guardar:", e);
       Alert.alert("Error", "No se pudo actualizar el resultado.");
     }
   };
 
-const generarPlanillaPartido = async (partido) => {
-  try {
-    const snapshot = await getDocs(collection(db, "inscripciones"));
-    
-    let equipoLocData = null;
-    let equipoVisData = null;
+  const generarPlanillaPartido = async (partido) => {
+    try {
+      const snapshot = await getDocs(collection(db, "inscripciones"));
+      let equipoLocData = null;
+      let equipoVisData = null;
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        data.equipos?.forEach(e => {
+          const matchNombre = e.nombreFixture?.trim().toLowerCase() === partido.local.trim().toLowerCase();
+          const matchNombreVis = e.nombreFixture?.trim().toLowerCase() === partido.visitante.trim().toLowerCase();
+          const matchCat = e.id?.toLowerCase().includes(partido.categoria.replace(/\D/g, ""));
 
-      data.equipos?.forEach(e => {
-      
-        const matchNombre = e.nombreFixture?.trim().toLowerCase() === partido.local.trim().toLowerCase();
-        const matchNombreVis = e.nombreFixture?.trim().toLowerCase() === partido.visitante.trim().toLowerCase();
-        const matchCat = e.id?.toLowerCase().includes(partido.categoria.replace(/\D/g, ""));
-
-        if (matchNombre && matchCat) equipoLocData = e;
-        if (matchNombreVis && matchCat) equipoVisData = e;
+          if (matchNombre && matchCat) equipoLocData = e;
+          if (matchNombreVis && matchCat) equipoVisData = e;
+        });
       });
-    });
 
-    const jugadorasLoc = equipoLocData?.jugadoras || [];
-    const jugadorasVis = equipoVisData?.jugadoras || [];
-    const staffLoc = equipoLocData?.staff || {};
-    const staffVis = equipoVisData?.staff || {};
+      const jugadorasLoc = equipoLocData?.jugadoras || [];
+      const jugadorasVis = equipoVisData?.jugadoras || [];
+      const staffLoc = equipoLocData?.staff || {};
+      const staffVis = equipoVisData?.staff || {};
 
-    const logoAsset = Asset.fromModule(logoClub);
-    const logoUri = logoAsset.uri;
-   const htmlContenido = `
+      const logoAsset = Asset.fromModule(logoClub);
+      const logoUri = logoAsset.uri;
+
+      const htmlContenido = `
       <html>
         <head>
           <style>
@@ -253,8 +235,7 @@ const generarPlanillaPartido = async (partido) => {
             <span>FECHA: ${partido.dia || '___/___'}</span>
             <span>HORA: ${partido.hora || '___:___'}</span>
             <span>CANCHA: ${partido.cancha}</span>
-            <span>ZONA: ${partido.zona}</span>
-            <span>PARTIDO N°: ${partido.partido}</span>
+            <span>ZONA: ÚNICA</span> <span>PARTIDO N°: ${partido.partido}</span>
           </div>
 
           <div class="main-container">
@@ -265,7 +246,7 @@ const generarPlanillaPartido = async (partido) => {
                   <tr><th width="15%">N°</th><th>JUGADORA (Apellido, Nombre)</th><th width="8%">V</th><th width="8%">A</th><th width="8%">R</th></tr>
                 </thead>
                 <tbody>
-                  ${Array.from({ length: 20 }).map((_, i) => {
+                  ${Array.from({ length: 18 }).map((_, i) => { // MODIFICADO: 18 en lugar de 20 para asegurar que entre en 1 hoja
                     const j = jugadorasLoc[i];
                     return `<tr>
                       <td style="text-align:center; font-weight:bold; font-size:12px;">${j?.dorsal || j?.numero || ''}</td>
@@ -295,7 +276,7 @@ const generarPlanillaPartido = async (partido) => {
                   <tr><th width="15%">N°</th><th>JUGADORA (Apellido, Nombre)</th><th width="8%">V</th><th width="8%">A</th><th width="8%">R</th></tr>
                 </thead>
                 <tbody>
-                  ${Array.from({ length: 20 }).map((_, i) => {
+                  ${Array.from({ length: 18 }).map((_, i) => { // MODIFICADO: 18 jugadoras
                     const j = jugadorasVis[i];
                     return `<tr>
                       <td style="text-align:center; font-weight:bold; font-size:12px;">${j?.dorsal || j?.numero || ''}</td>
@@ -343,29 +324,27 @@ const generarPlanillaPartido = async (partido) => {
         </body>
       </html>
     `;
- 
-    const printOptions = {
-      html: htmlContenido,
-      base64: false
-    };
+   
+      const printOptions = { html: htmlContenido, base64: false };
 
-    if (Platform.OS === 'web') {
-      const win = window.open('', '_blank');
-      win.document.write(htmlContenido);
-      win.document.close();
-      setTimeout(() => win.print(), 800);
-    } else {
-      const { uri } = await Print.printToFileAsync(printOptions);
-      await Sharing.shareAsync(uri);
+      if (Platform.OS === 'web') {
+        const win = window.open('', '_blank');
+        win.document.write(htmlContenido);
+        win.document.close();
+        setTimeout(() => win.print(), 800);
+      } else {
+        const { uri } = await Print.printToFileAsync(printOptions);
+        await Sharing.shareAsync(uri);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "No se pudo generar la planilla.");
     }
-  } catch (error) {
-    console.error(error);
-    Alert.alert("Error", "No se pudo generar la planilla.");
-  }
-};
+  };
+
   const renderPartido = ({ item }) => (
     <View style={styles.card}>
-      <Text style={styles.headerCard}>Partido N° {item.partido} - Cancha {item.cancha}</Text>
+      <Text style={styles.headerCard}>Partido N° {item.partido} - {item.dia} {item.hora}</Text>
       <View style={styles.row}>
         <View style={styles.equipoCont}>
           <Text style={styles.equipoNombre}>{item.local}</Text>
@@ -389,7 +368,7 @@ const generarPlanillaPartido = async (partido) => {
       </View>
       <View style={styles.btnRow}>
         <TouchableOpacity style={styles.btnGuardar} onPress={() => handleGuardar(item)}>
-          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>GUARDAR</Text>
+          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>GUARDAR RESULTADO</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnPdf} onPress={() => generarPlanillaPartido(item)}>
           <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>📄 PLANILLA</Text>
@@ -400,7 +379,6 @@ const generarPlanillaPartido = async (partido) => {
 
   return (
     <View style={globalStyles.mainContainer}>
-      {/* Selector de Categoría */}
       <View style={styles.selector}>
         {['Sub 14', 'Sub 16'].map(cat => (
           <TouchableOpacity 
@@ -408,27 +386,15 @@ const generarPlanillaPartido = async (partido) => {
             style={[styles.btnCat, categoria === cat && styles.btnCatActive]} 
             onPress={() => setCategoria(cat)}
           >
-            <Text style={[styles.txtCat, categoria === cat && styles.txtCatActive]}>{cat}</Text>
+            <Text style={[styles.txtCat, categoria === cat && styles.txtCatActive]}>{cat.toUpperCase()}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Selector de Zona */}
-      <View style={styles.selector}>
-        {[
-          { id: 'A', label: 'Zona A' },
-          { id: 'B', label: 'Zona B' },
-          { id: 'Def', label: 'Definición (Finales)' }
-        ].map(z => (
-          <TouchableOpacity 
-            key={z.id} 
-            style={[styles.btnCat, zonaFiltro === z.id && { backgroundColor: '#333' }]} 
-            onPress={() => setZonaFiltro(z.id)}
-          >
-            <Text style={[styles.txtCat, zonaFiltro === z.id && { color: '#fff' }]}>{z.label}</Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.infoBanner}>
+        <Text style={styles.infoText}>MODO: ZONA ÚNICA - CARGA DE RESULTADOS</Text>
       </View>
+
       {cargando ? (
         <ActivityIndicator size="large" color="#D32F2F" style={{ marginTop: 20 }} />
       ) : (
@@ -437,7 +403,7 @@ const generarPlanillaPartido = async (partido) => {
           keyExtractor={item => item.id.toString()}
           renderItem={renderPartido}
           contentContainerStyle={{ padding: 15 }}
-          ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No hay partidos</Text>}
+          ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No hay partidos cargados</Text>}
         />
       )}
     </View>
@@ -445,19 +411,21 @@ const generarPlanillaPartido = async (partido) => {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', padding: 15, marginBottom: 12, borderRadius: 12, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  card: { backgroundColor: '#fff', padding: 15, marginBottom: 12, borderRadius: 12, elevation: 4 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
   equipoCont: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  inputGoles: { backgroundColor: '#f0f0f0', width: 40, height: 40, textAlign: 'center', borderRadius: 8, marginHorizontal: 8, fontSize: 16, fontWeight: 'bold', borderWidth: 1, borderColor: '#ddd' },
-  equipoNombre: { fontSize: 13, width: 75, textAlign: 'center', fontWeight: 'bold', color: '#333' },
-  vs: { fontWeight: 'bold', fontSize: 12, color: '#999' },
+  inputGoles: { backgroundColor: '#f0f0f0', width: 45, height: 45, textAlign: 'center', borderRadius: 8, marginHorizontal: 8, fontSize: 18, fontWeight: 'bold', borderWidth: 1, borderColor: '#ccc' },
+  equipoNombre: { fontSize: 12, width: 80, textAlign: 'center', fontWeight: 'bold', color: '#333' },
+  vs: { fontWeight: 'bold', fontSize: 14, color: '#D32F2F' },
   btnRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  btnGuardar: { backgroundColor: '#2e7d32', padding: 12, borderRadius: 8, flex: 1, marginRight: 5, alignItems: 'center' },
+  btnGuardar: { backgroundColor: '#2e7d32', padding: 12, borderRadius: 8, flex: 1.5, marginRight: 5, alignItems: 'center' },
   btnPdf: { backgroundColor: '#333', padding: 12, borderRadius: 8, flex: 1, marginLeft: 5, alignItems: 'center' },
-  selector: { flexDirection: 'row' },
-  btnCat: { flex: 1, padding: 12, alignItems: 'center', backgroundColor: '#eee', borderWidth: 0.5, borderColor: '#ccc' },
+  selector: { flexDirection: 'row', backgroundColor: '#eee' },
+  btnCat: { flex: 1, padding: 15, alignItems: 'center' },
   btnCatActive: { backgroundColor: '#D32F2F' },
-  txtCat: { color: '#333', fontSize: 12 },
-  txtCatActive: { color: '#fff', fontWeight: 'bold' },
-  headerCard: { fontSize: 12, color: '#666', textAlign: 'center', marginBottom: 10, fontWeight: 'bold' }
+  txtCat: { color: '#333', fontWeight: 'bold' },
+  txtCatActive: { color: '#fff' },
+  headerCard: { fontSize: 11, color: '#666', textAlign: 'center', marginBottom: 10, fontWeight: 'bold', textTransform: 'uppercase' },
+  infoBanner: { backgroundColor: '#333', padding: 8 },
+  infoText: { color: '#fff', fontSize: 10, textAlign: 'center', fontWeight: 'bold' }
 });
