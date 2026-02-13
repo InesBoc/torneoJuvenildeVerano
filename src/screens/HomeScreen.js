@@ -67,8 +67,13 @@ export default function HomeScreen({ navigation }) {
           >
             <Text style={globalStyles.btnText}>🏆 FIXTURE Y POSICIONES</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
+         <TouchableOpacity
+          style={[globalStyles.input, { backgroundColor: '#e39b85', alignItems: 'center', marginTop: 10 }]}
+          onPress={() => navigation.navigate('Votacion')}
+        >
+          <Text style={globalStyles.btnText}>⭐ VOTAR MEJOR JUGADORA</Text>
+        </TouchableOpacity>
+                  <TouchableOpacity
             style={[globalStyles.input, { backgroundColor: '#a69a95', alignItems: 'center' }]}
             onPress={() => navigation.navigate('Login')}
           >

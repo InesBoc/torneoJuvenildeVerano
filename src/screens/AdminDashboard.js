@@ -10,8 +10,17 @@ import {
   ActivityIndicator,
   Alert 
 } from 'react-native';
-import { db } from '../services/firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+// Asegúrate de que esta ruta coincida exactamente con tu proyecto
+import { db } from '../services/firebase'; 
+import { 
+  collection, 
+  query, 
+  orderBy, 
+  onSnapshot, 
+  doc, 
+  updateDoc, 
+  writeBatch 
+} from 'firebase/firestore';
 import { globalStyles } from '../styles/globalStyles';
 
 export default function AdminDashboard() {
@@ -37,6 +46,49 @@ export default function AdminDashboard() {
 
     return () => unsubscribe();
   }, []);
+
+  // FUNCIÓN PARA GENERAR CÓDIGOS
+  const generarCodigosVotacion = async () => {
+  console.log("¡Botón presionado!"); // <--- Esto DEBE salir en la consola
+  alert("Iniciando proceso...");      // <--- Esto DEBE salir en la pantalla
+
+  try {
+    if (inscripciones.length === 0) {
+      console.log("No hay inscripciones cargadas en el estado.");
+      alert("Error: La lista de inscripciones está vacía.");
+      return;
+    }
+
+    const batch = writeBatch(db);
+    console.log("Preparando códigos para", inscripciones.length, "clubes");
+
+    inscripciones.forEach(ins => {
+      const clubNom = ins.club?.nombre || "CLUB";
+      const idCorto = ins.id.slice(-3).toUpperCase();
+      const codigo = `${clubNom.substring(0, 3).toUpperCase()}${idCorto}`;
+      
+      console.log("Generando código:", codigo, "para el club:", clubNom);
+
+      const ref = doc(db, "codigos_votos", codigo);
+      batch.set(ref, { 
+        club: clubNom, 
+        votoSub14: false, 
+        votoSub16: false,
+        inscripcionId: ins.id,
+        codigo: codigo
+      }, { merge: true });
+    });
+
+    console.log("Enviando batch a Firebase...");
+    await batch.commit();
+    console.log("Batch confirmado por Firebase");
+    alert("¡Éxito! Códigos generados correctamente.");
+
+  } catch (e) {
+    console.error("ERROR AL GENERAR:", e);
+    alert("Hubo un error: " + e.message);
+  }
+};
 
   const vincularEquipoIndiv = async (inscripcion, equipoIndex, textoInput) => {
     const nombreAFijar = (textoInput !== undefined) ? textoInput : inscripcion.equipos[equipoIndex].nombreFixture;
@@ -103,6 +155,20 @@ export default function AdminDashboard() {
               <Text style={styles.btnIrFixtureText}>🏑 GESTIONAR RESULTADOS Y PLANILLAS</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity 
+              style={styles.btnIrFixture}
+              onPress={generarCodigosVotacion}
+            >
+              <Text style={styles.btnIrFixtureText}>
+                🔑 GENERAR CÓDIGOS DE VOTACIÓN
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.btnIrFixture}
+              onPress={() => navigation.navigate('RankingVotacion')}
+            >
+              <Text style={styles.btnIrFixtureText}>📊 VER RESULTADOS DE VOTACIÓN</Text>
+            </TouchableOpacity>
             <View style={styles.headerInfo}>
               <Text style={styles.headerText}>
                 Clubes inscriptos: <Text style={{ fontWeight: 'bold' }}>{inscripciones.length}</Text>
@@ -114,14 +180,21 @@ export default function AdminDashboard() {
           <View style={styles.adminCard}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
               <Text style={styles.clubTitle}>{inscripcion.club?.nombre}</Text>
-              <View style={[styles.badge, {backgroundColor: inscripcion.estado === 'Aprobada' ? '#2e7d32' : '#ffa000'}]}>
-                <Text style={styles.badgeText}>{inscripcion.estado}</Text>
-              </View>
+              <View style={styles.codigoContainer}>
+        <Text style={styles.codigoLabel}>CÓDIGO:</Text>
+        <Text style={styles.codigoValue}>
+          {`${inscripcion.club?.nombre.substring(0, 3).toUpperCase()}${inscripcion.id.slice(-3).toUpperCase()}`}
+        </Text>
+      </View>
             </View>
             
+            <View style={[styles.badge, {backgroundColor: inscripcion.estado === 'Aprobada' ? '#2e7d32' : '#ffa000'}]}>
+              <Text style={styles.badgeText}>{inscripcion.estado}</Text>
+            </View>
+          
+           
             <View style={styles.mappingSection}>
               <Text style={styles.labelMapping}>VINCULAR CON NOMBRE DE FIXTURE:</Text>
-              
               {inscripcion.equipos?.map((eq, index) => {
                 const inputKey = `${inscripcion.id}-${index}`;
                 const yaVinculado = eq.nombreFixture && eq.nombreFixture.length > 0;
@@ -154,11 +227,6 @@ export default function AdminDashboard() {
                         </Text>
                       </TouchableOpacity>
                     </View>
-                    {yaVinculado && (
-                      <Text style={{fontSize: 9, color: '#2e7d32', marginTop: 4, fontWeight: 'bold'}}>
-                        ✓ VINCULADO CORRECTAMENTE
-                      </Text>
-                    )}
                   </View>
                 );
               })}
@@ -200,5 +268,27 @@ const styles = StyleSheet.create({
   equipoVinculoRow: { marginBottom: 12, backgroundColor: '#fdfdfd', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#eee' },
   inputMapping: { backgroundColor: '#fff', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 5, flex: 1, fontSize: 13, borderWidth: 1, borderColor: '#ccc', color: '#333' },
   rowMapping: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  btnVinculoMini: { backgroundColor: '#D32F2F', paddingVertical: 10, paddingHorizontal: 15, borderRadius: 5 }
+  btnVinculoMini: { backgroundColor: '#D32F2F', paddingVertical: 10, paddingHorizontal: 15, borderRadius: 5 },
+  codigoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginTop: 5,
+    alignSelf: 'flex-start',
+  },
+  codigoLabel: {
+    fontSize: 10,
+    color: '#666',
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  codigoValue: {
+    fontSize: 14,
+    color: '#D32F2F',
+    fontWeight: '900',
+    letterSpacing: 1,
+  }
 });

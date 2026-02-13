@@ -20,6 +20,8 @@ import AdminDashboard from './src/screens/AdminDashboard';
 import DetalleInscripcionScreen from './src/screens/DetalleInscripcionScreen';
 import FixtureScreen from './src/screens/FixtureScreen';
 import AdminFixtureScreen from './src/screens/AdminFixtureScreen';
+import VotacionScreen from './src/screens/VotacionScreen';
+import RankingVotacion from './src/screens/RankingVotacion';
 
 
 const Stack = createStackNavigator();
@@ -110,6 +112,16 @@ const Stack = createStackNavigator();
           component={AdminFixtureScreen} 
           options={{ title: 'Cargar Resultados' }} 
           />
+          <Stack.Screen 
+          name="Votacion" 
+          component={VotacionScreen} 
+          options={{ title: 'Votación' }} 
+           />
+            <Stack.Screen 
+          name="RankingVotacion"
+          component={RankingVotacion}
+          options={{ title: 'Resultados de Votación' }} 
+           />
         </Stack.Navigator>
       </NavigationContainer>
     </InscripcionProvider>
